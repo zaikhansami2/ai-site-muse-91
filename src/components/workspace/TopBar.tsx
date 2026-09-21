@@ -1,4 +1,4 @@
-import { Download, Github, Plus, Rocket, Trash2 } from "lucide-react";
+import { Download, Github, Plus, Rocket, Terminal, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -30,6 +30,37 @@ export function TopBar({
   files: ProjectFile[];
 }) {
   const [deploying, setDeploying] = useState(false);
+  const [booting, setBooting] = useState(false);
+
+  const runSandbox = async () => {
+    if (files.length === 0) {
+      toast.error("Generate a site first — there is nothing to run.");
+      return;
+    }
+    setBooting(true);
+    const toastId = toast.loading("Starting a live sandbox…");
+    try {
+      const response = await fetch("/api/sandbox", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ files }),
+      });
+      const data = (await response.json()) as { url?: string; error?: string };
+      if (!response.ok || !data.url) throw new Error(data.error ?? "The sandbox failed to start.");
+      toast.success("Sandbox running", {
+        id: toastId,
+        description: data.url,
+        action: { label: "Open", onClick: () => window.open(data.url, "_blank") },
+        duration: 15000,
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "The sandbox failed to start.", {
+        id: toastId,
+      });
+    } finally {
+      setBooting(false);
+    }
+  };
 
   const deploy = async () => {
     if (files.length === 0) {
