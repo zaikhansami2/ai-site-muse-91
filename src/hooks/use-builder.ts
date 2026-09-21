@@ -1,15 +1,27 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { parseFiles, type ProjectFile } from "@/lib/files";
+import { detectMode } from "@/lib/intent";
 import type { Mode } from "@/lib/prompts";
-import { loadProjects, newProject, saveProjects, type ChatMessage, type Project } from "@/lib/storage";
+import {
+  loadProjects,
+  newProject,
+  saveProjects,
+  type ChatMessage,
+  type Project,
+} from "@/lib/storage";
 
 export type Status = "idle" | "analyzing" | "building" | "formatting" | "error";
+
+/** "auto" lets the assistant decide between chat, plan and build by itself. */
+export type UiMode = Mode | "auto";
 
 export function useBuilder() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [mode, setMode] = useState<Mode>("chat");
+  const [mode, setMode] = useState<UiMode>("auto");
+  const [lastMode, setLastMode] = useState<Mode>("chat");
+  const [builderOpen, setBuilderOpen] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
@@ -86,11 +98,30 @@ export function useBuilder() {
     setStatus("idle");
   }, []);
 
+  // Switching chats reopens the workspace only when that chat already has a site.
+  useEffect(() => {
+    setBuilderOpen((projects.find((p) => p.id === activeId)?.files.length ?? 0) > 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeId]);
+
+  const hasFilesRef = useRef(false);
+  const projectsRef = useRef<Project[]>([]);
+  useEffect(() => {
+    hasFilesRef.current = (active?.files?.length ?? 0) > 0;
+    projectsRef.current = projects;
+  }, [active, projects]);
+
   const send = useCallback(
     async (text: string, options?: { image?: string; mode?: Mode }) => {
-      const requestMode = options?.mode ?? mode;
+      const requestMode: Mode =
+        options?.mode ??
+        (mode === "auto"
+          ? detectMode(text, { hasImage: Boolean(options?.image), hasFiles: hasFilesRef.current })
+          : mode);
       if (!text.trim() && !options?.image) return;
       setError(null);
+      setLastMode(requestMode);
+      if (requestMode === "build") setBuilderOpen(true);
 
       const userMessage: ChatMessage = {
         id: crypto.randomUUID(),
@@ -101,17 +132,16 @@ export function useBuilder() {
       };
       const assistantId = crypto.randomUUID();
 
-      let history: ChatMessage[] = [];
+      const current = projectsRef.current.find((p) => p.id === activeIdRef.current);
+      const history: ChatMessage[] = [...(current?.messages ?? []), userMessage];
       patchActive((project) => {
-        history = [...project.messages, userMessage];
         return {
           ...project,
           name:
-            project.messages.length === 0 && text.trim()
-              ? text.trim().slice(0, 48)
-              : project.name,
+            project.messages.length === 0 && text.trim() ? text.trim().slice(0, 48) : project.name,
           messages: [
-            ...history,
+            ...project.messages,
+            userMessage,
             { id: assistantId, role: "assistant", content: "", mode: requestMode },
           ],
         };
@@ -201,6 +231,9 @@ export function useBuilder() {
     setThumbnail,
     mode,
     setMode,
+    lastMode,
+    builderOpen,
+    setBuilderOpen,
     research,
     setResearch,
     status,
