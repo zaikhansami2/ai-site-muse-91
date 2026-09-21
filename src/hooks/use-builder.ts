@@ -105,9 +105,11 @@ export function useBuilder() {
   }, [activeId]);
 
   const hasFilesRef = useRef(false);
+  const projectsRef = useRef<Project[]>([]);
   useEffect(() => {
     hasFilesRef.current = (active?.files?.length ?? 0) > 0;
-  }, [active]);
+    projectsRef.current = projects;
+  }, [active, projects]);
 
   const send = useCallback(
     async (text: string, options?: { image?: string; mode?: Mode }) => {
@@ -130,15 +132,16 @@ export function useBuilder() {
       };
       const assistantId = crypto.randomUUID();
 
-      let history: ChatMessage[] = [];
+      const current = projectsRef.current.find((p) => p.id === activeIdRef.current);
+      const history: ChatMessage[] = [...(current?.messages ?? []), userMessage];
       patchActive((project) => {
-        history = [...project.messages, userMessage];
         return {
           ...project,
           name:
             project.messages.length === 0 && text.trim() ? text.trim().slice(0, 48) : project.name,
           messages: [
-            ...history,
+            ...project.messages,
+            userMessage,
             { id: assistantId, role: "assistant", content: "", mode: requestMode },
           ],
         };
