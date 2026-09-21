@@ -15,6 +15,7 @@ export type Project = {
   updatedAt: number;
   messages: ChatMessage[];
   files: ProjectFile[];
+  thumbnail?: string;
 };
 
 const KEY = "forgeui.projects.v1";

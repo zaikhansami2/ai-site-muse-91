@@ -3,6 +3,7 @@ import { streamText, type ModelMessage } from "ai";
 
 import { getLovableModel } from "@/lib/ai-gateway.server";
 import { systemPrompt, type Mode } from "@/lib/prompts";
+import { researchContext } from "@/lib/research.server";
 
 type IncomingMessage = {
   role: "user" | "assistant";
@@ -10,7 +11,7 @@ type IncomingMessage = {
   image?: string;
 };
 
-type Body = { mode?: Mode; messages?: IncomingMessage[] };
+type Body = { mode?: Mode; messages?: IncomingMessage[]; research?: boolean };
 
 function toModelMessages(messages: IncomingMessage[]): ModelMessage[] {
   return messages.map((message) => {
@@ -38,10 +39,22 @@ export const Route = createFileRoute("/api/chat")({
           return new Response("Messages are required", { status: 400 });
         }
 
+        let research = "";
+        if (body.research) {
+          const lastUser = [...messages].reverse().find((message) => message.role === "user");
+          if (lastUser?.content) {
+            try {
+              research = await researchContext(lastUser.content);
+            } catch {
+              research = "";
+            }
+          }
+        }
+
         try {
           const result = streamText({
             model: getLovableModel(),
-            system: systemPrompt(mode),
+            system: research ? `${systemPrompt(mode)}\n\n${research}` : systemPrompt(mode),
             messages: toModelMessages(messages),
             providerOptions: {
               openai: {

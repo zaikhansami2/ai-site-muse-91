@@ -1,8 +1,10 @@
-import { Check, Copy, FileCode2, FileJson, FileText, Hash } from "lucide-react";
+import { Check, Copy, FileCode2, FileJson, FileText, Hash, Loader2, Wand2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { languageOf, type ProjectFile } from "@/lib/files";
+import { formatAll, isFormattable } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 function iconFor(path: string) {
@@ -13,9 +15,16 @@ function iconFor(path: string) {
   return FileText;
 }
 
-export function CodePane({ files }: { files: ProjectFile[] }) {
+export function CodePane({
+  files,
+  onFilesChange,
+}: {
+  files: ProjectFile[];
+  onFilesChange?: (files: ProjectFile[]) => void;
+}) {
   const [selected, setSelected] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [formatting, setFormatting] = useState(false);
 
   useEffect(() => {
     if (files.length === 0) {
@@ -34,6 +43,19 @@ export function CodePane({ files }: { files: ProjectFile[] }) {
     await navigator.clipboard.writeText(current.content);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
+  };
+
+  const format = async () => {
+    if (!onFilesChange || files.length === 0) return;
+    setFormatting(true);
+    try {
+      onFilesChange(await formatAll(files));
+      toast.success("Code tidied up.");
+    } catch {
+      toast.error("That code could not be formatted.");
+    } finally {
+      setFormatting(false);
+    }
   };
 
   if (files.length === 0) {
@@ -76,10 +98,27 @@ export function CodePane({ files }: { files: ProjectFile[] }) {
           <span className="truncate font-mono text-xs text-muted-foreground">
             {current?.path}
           </span>
-          <Button variant="ghost" size="sm" onClick={copy}>
-            {copied ? <Check className="size-3.5 text-primary" /> : <Copy className="size-3.5" />}
-            {copied ? "Copied" : "Copy"}
-          </Button>
+          <div className="flex items-center gap-1">
+            {onFilesChange && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={format}
+                disabled={formatting || !current || !isFormattable(current.path)}
+              >
+                {formatting ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <Wand2 className="size-3.5" />
+                )}
+                Format
+              </Button>
+            )}
+            <Button variant="ghost" size="sm" onClick={copy}>
+              {copied ? <Check className="size-3.5 text-primary" /> : <Copy className="size-3.5" />}
+              {copied ? "Copied" : "Copy"}
+            </Button>
+          </div>
         </div>
         <pre className="flex-1 overflow-auto bg-[oklch(0.14_0.012_265)] p-4 text-xs leading-relaxed">
           <code className="font-mono text-foreground/90">{current?.content}</code>

@@ -13,6 +13,7 @@ export function useBuilder() {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
+  const [research, setResearch] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -69,6 +70,16 @@ export function useBuilder() {
     [patchActive],
   );
 
+  const setFiles = useCallback(
+    (files: ProjectFile[]) => patchActive((project) => ({ ...project, files })),
+    [patchActive],
+  );
+
+  const setThumbnail = useCallback(
+    (thumbnail: string) => patchActive((project) => ({ ...project, thumbnail })),
+    [patchActive],
+  );
+
   const stop = useCallback(() => {
     abortRef.current?.abort();
     abortRef.current = null;
@@ -116,6 +127,7 @@ export function useBuilder() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             mode: requestMode,
+            research,
             messages: history.map((m) => ({
               role: m.role,
               content: m.content,
@@ -155,8 +167,17 @@ export function useBuilder() {
           }));
         }
 
-        setStatus("formatting");
-        setTimeout(() => setStatus("idle"), 350);
+        // Tidy the generated code with Prettier before it lands in the editor.
+        if (requestMode === "build") {
+          setStatus("formatting");
+          const finalFiles = parseFiles(acc);
+          if (finalFiles.length > 0) {
+            const { formatAll } = await import("@/lib/format");
+            const pretty = await formatAll(finalFiles as ProjectFile[]);
+            patchActive((project) => ({ ...project, files: pretty }));
+          }
+        }
+        setStatus("idle");
       } catch (err) {
         if ((err as Error).name === "AbortError") return;
         setStatus("error");
@@ -165,7 +186,7 @@ export function useBuilder() {
         abortRef.current = null;
       }
     },
-    [mode, patchActive],
+    [mode, patchActive, research],
   );
 
   return {
@@ -176,8 +197,12 @@ export function useBuilder() {
     createProject,
     deleteProject,
     renameProject,
+    setFiles,
+    setThumbnail,
     mode,
     setMode,
+    research,
+    setResearch,
     status,
     error,
     send,

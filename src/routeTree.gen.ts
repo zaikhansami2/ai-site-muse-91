@@ -12,7 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiDeployRouteImport } from './routes/api/deploy'
+import { Route as ApiGithubRouteImport } from './routes/api/github'
+import { Route as ApiResearchRouteImport } from './routes/api/research'
 import { Route as ApiSandboxRouteImport } from './routes/api/sandbox'
+import { Route as ApiPublicWidgetChatRouteImport } from './routes/api/public/widget-chat'
+import { Route as ApiPublicWidgetLeadRouteImport } from './routes/api/public/widget-lead'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -29,9 +33,29 @@ const ApiDeployRoute = ApiDeployRouteImport.update({
   path: '/api/deploy',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGithubRoute = ApiGithubRouteImport.update({
+  id: '/api/github',
+  path: '/api/github',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiResearchRoute = ApiResearchRouteImport.update({
+  id: '/api/research',
+  path: '/api/research',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiSandboxRoute = ApiSandboxRouteImport.update({
   id: '/api/sandbox',
   path: '/api/sandbox',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicWidgetChatRoute = ApiPublicWidgetChatRouteImport.update({
+  id: '/api/public/widget-chat',
+  path: '/api/public/widget-chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicWidgetLeadRoute = ApiPublicWidgetLeadRouteImport.update({
+  id: '/api/public/widget-lead',
+  path: '/api/public/widget-lead',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -39,34 +63,75 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/chat': typeof ApiChatRoute
   '/api/deploy': typeof ApiDeployRoute
+  '/api/github': typeof ApiGithubRoute
+  '/api/research': typeof ApiResearchRoute
   '/api/sandbox': typeof ApiSandboxRoute
+  '/api/public/widget-chat': typeof ApiPublicWidgetChatRoute
+  '/api/public/widget-lead': typeof ApiPublicWidgetLeadRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/chat': typeof ApiChatRoute
   '/api/deploy': typeof ApiDeployRoute
+  '/api/github': typeof ApiGithubRoute
+  '/api/research': typeof ApiResearchRoute
   '/api/sandbox': typeof ApiSandboxRoute
+  '/api/public/widget-chat': typeof ApiPublicWidgetChatRoute
+  '/api/public/widget-lead': typeof ApiPublicWidgetLeadRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api/chat': typeof ApiChatRoute
   '/api/deploy': typeof ApiDeployRoute
+  '/api/github': typeof ApiGithubRoute
+  '/api/research': typeof ApiResearchRoute
   '/api/sandbox': typeof ApiSandboxRoute
+  '/api/public/widget-chat': typeof ApiPublicWidgetChatRoute
+  '/api/public/widget-lead': typeof ApiPublicWidgetLeadRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/chat' | '/api/deploy' | '/api/sandbox'
+  fullPaths:
+    | '/'
+    | '/api/chat'
+    | '/api/deploy'
+    | '/api/github'
+    | '/api/research'
+    | '/api/sandbox'
+    | '/api/public/widget-chat'
+    | '/api/public/widget-lead'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/chat' | '/api/deploy' | '/api/sandbox'
-  id: '__root__' | '/' | '/api/chat' | '/api/deploy' | '/api/sandbox'
+  to:
+    | '/'
+    | '/api/chat'
+    | '/api/deploy'
+    | '/api/github'
+    | '/api/research'
+    | '/api/sandbox'
+    | '/api/public/widget-chat'
+    | '/api/public/widget-lead'
+  id:
+    | '__root__'
+    | '/'
+    | '/api/chat'
+    | '/api/deploy'
+    | '/api/github'
+    | '/api/research'
+    | '/api/sandbox'
+    | '/api/public/widget-chat'
+    | '/api/public/widget-lead'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiDeployRoute: typeof ApiDeployRoute
+  ApiGithubRoute: typeof ApiGithubRoute
+  ApiResearchRoute: typeof ApiResearchRoute
   ApiSandboxRoute: typeof ApiSandboxRoute
+  ApiPublicWidgetChatRoute: typeof ApiPublicWidgetChatRoute
+  ApiPublicWidgetLeadRoute: typeof ApiPublicWidgetLeadRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -92,11 +157,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDeployRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/github': {
+      id: '/api/github'
+      path: '/api/github'
+      fullPath: '/api/github'
+      preLoaderRoute: typeof ApiGithubRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/research': {
+      id: '/api/research'
+      path: '/api/research'
+      fullPath: '/api/research'
+      preLoaderRoute: typeof ApiResearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/sandbox': {
       id: '/api/sandbox'
       path: '/api/sandbox'
       fullPath: '/api/sandbox'
       preLoaderRoute: typeof ApiSandboxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/widget-chat': {
+      id: '/api/public/widget-chat'
+      path: '/api/public/widget-chat'
+      fullPath: '/api/public/widget-chat'
+      preLoaderRoute: typeof ApiPublicWidgetChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/widget-lead': {
+      id: '/api/public/widget-lead'
+      path: '/api/public/widget-lead'
+      fullPath: '/api/public/widget-lead'
+      preLoaderRoute: typeof ApiPublicWidgetLeadRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -106,7 +199,11 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiChatRoute: ApiChatRoute,
   ApiDeployRoute: ApiDeployRoute,
+  ApiGithubRoute: ApiGithubRoute,
+  ApiResearchRoute: ApiResearchRoute,
   ApiSandboxRoute: ApiSandboxRoute,
+  ApiPublicWidgetChatRoute: ApiPublicWidgetChatRoute,
+  ApiPublicWidgetLeadRoute: ApiPublicWidgetLeadRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
