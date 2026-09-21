@@ -92,11 +92,22 @@ export function useBuilder() {
     setStatus("idle");
   }, []);
 
+  const hasFilesRef = useRef(false);
+  useEffect(() => {
+    hasFilesRef.current = (active?.files?.length ?? 0) > 0;
+  }, [active]);
+
   const send = useCallback(
     async (text: string, options?: { image?: string; mode?: Mode }) => {
-      const requestMode = options?.mode ?? mode;
+      const requestMode: Mode =
+        options?.mode ??
+        (mode === "auto"
+          ? detectMode(text, { hasImage: Boolean(options?.image), hasFiles: hasFilesRef.current })
+          : mode);
       if (!text.trim() && !options?.image) return;
       setError(null);
+      setLastMode(requestMode);
+      if (requestMode === "build") setBuilderOpen(true);
 
       const userMessage: ChatMessage = {
         id: crypto.randomUUID(),
