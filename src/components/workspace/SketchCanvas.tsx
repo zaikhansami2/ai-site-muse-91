@@ -137,7 +137,7 @@ export function SketchCanvas({
           </Button>
         </div>
       </div>
-      <div className="relative flex-1 bg-[oklch(0.14_0.012_265)] p-4">
+      <div className="relative flex-1 bg-surface-raised p-4">
         <canvas
           ref={canvasRef}
           onPointerDown={down}

@@ -95,9 +95,7 @@ export function CodePane({
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-center justify-between border-b border-border px-3 py-2">
-          <span className="truncate font-mono text-xs text-muted-foreground">
-            {current?.path}
-          </span>
+          <span className="truncate font-mono text-xs text-muted-foreground">{current?.path}</span>
           <div className="flex items-center gap-1">
             {onFilesChange && (
               <Button
@@ -120,7 +118,7 @@ export function CodePane({
             </Button>
           </div>
         </div>
-        <pre className="flex-1 overflow-auto bg-[oklch(0.14_0.012_265)] p-4 text-xs leading-relaxed">
+        <pre className="flex-1 overflow-auto bg-surface-raised p-4 text-xs leading-relaxed">
           <code className="font-mono text-foreground/90">{current?.content}</code>
         </pre>
       </div>

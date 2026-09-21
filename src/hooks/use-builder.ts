@@ -9,7 +9,7 @@ export type Status = "idle" | "analyzing" | "building" | "formatting" | "error";
 export function useBuilder() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [mode, setMode] = useState<Mode>("build");
+  const [mode, setMode] = useState<Mode>("chat");
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);

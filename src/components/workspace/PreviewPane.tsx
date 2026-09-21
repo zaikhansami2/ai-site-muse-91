@@ -48,14 +48,14 @@ export function PreviewPane({ files }: { files: ProjectFile[] }) {
         </Button>
       </div>
 
-      <div className="flex flex-1 justify-center overflow-auto bg-[oklch(0.14_0.012_265)] p-4">
+      <div className="flex flex-1 justify-center overflow-auto bg-surface-raised p-4">
         {doc ? (
           <iframe
             key={nonce}
             title="Live preview"
             srcDoc={doc}
             sandbox="allow-scripts allow-forms allow-popups allow-modals"
-            className="h-full w-full rounded-xl border border-border bg-white shadow-2xl"
+            className="h-full w-full rounded-lg border border-border bg-card shadow-xl"
             style={
               VIEWPORTS[viewport].width
                 ? { width: VIEWPORTS[viewport].width, maxWidth: "100%" }
