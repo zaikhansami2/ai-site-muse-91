@@ -9,11 +9,7 @@ import { PreviewPane } from "@/components/workspace/PreviewPane";
 import { SketchCanvas } from "@/components/workspace/SketchCanvas";
 import { TopBar } from "@/components/workspace/TopBar";
 import { Button } from "@/components/ui/button";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { useBuilder } from "@/hooks/use-builder";
 import { SKETCH_PROMPT } from "@/lib/prompts";
 import { cn } from "@/lib/utils";
@@ -103,9 +99,20 @@ function Workspace() {
   return (
     <div className="relative h-screen overflow-hidden bg-background text-foreground">
       {background.type === "video" ? (
-        <video className="absolute inset-0 size-full object-cover" src={background.url} autoPlay muted loop playsInline />
+        <video
+          className="absolute inset-0 size-full object-cover"
+          src={background.url}
+          autoPlay
+          muted
+          loop
+          playsInline
+        />
       ) : (
-        <img className="absolute inset-0 size-full object-cover" src={background.url} alt="Workspace background" />
+        <img
+          className="absolute inset-0 size-full object-cover"
+          src={background.url}
+          alt="Workspace background"
+        />
       )}
       <div className="absolute inset-0 bg-background/42" />
 
@@ -126,7 +133,9 @@ function Workspace() {
               files={files}
             />
             <ResizablePanelGroup className="min-h-0 flex-1">
-              <ResizablePanel defaultSize={44} minSize={32}>{chat}</ResizablePanel>
+              <ResizablePanel defaultSize={44} minSize={32}>
+                {chat}
+              </ResizablePanel>
               <ResizableHandle withHandle />
               <ResizablePanel defaultSize={56} minSize={34}>
                 <div className="flex h-full min-h-0 flex-col bg-background/88 backdrop-blur-xl">
@@ -137,7 +146,11 @@ function Workspace() {
                         variant="ghost"
                         size="sm"
                         onClick={() => setTab(key)}
-                        className={cn(tab === key ? "bg-accent text-accent-foreground" : "text-muted-foreground")}
+                        className={cn(
+                          tab === key
+                            ? "bg-accent text-accent-foreground"
+                            : "text-muted-foreground",
+                        )}
                       >
                         <Icon /> {label}
                       </Button>
