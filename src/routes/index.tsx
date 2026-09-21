@@ -64,7 +64,7 @@ function Workspace() {
         files={files}
       />
 
-      <ResizablePanelGroup direction="horizontal" className="min-h-0 flex-1">
+      <ResizablePanelGroup className="min-h-0 flex-1">
         <ResizablePanel defaultSize={38} minSize={26}>
           <ChatPanel
             messages={builder.active?.messages ?? []}
