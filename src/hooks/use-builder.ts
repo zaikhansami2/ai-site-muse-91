@@ -7,6 +7,9 @@ import { loadProjects, newProject, saveProjects, type ChatMessage, type Project 
 
 export type Status = "idle" | "analyzing" | "building" | "formatting" | "error";
 
+/** "auto" lets the assistant decide between chat, plan and build by itself. */
+export type UiMode = Mode | "auto";
+
 export function useBuilder() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
