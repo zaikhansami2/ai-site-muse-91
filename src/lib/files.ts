@@ -13,7 +13,7 @@ export function parseFiles(text: string): ProjectFile[] {
   let match: RegExpExecArray | null;
 
   while ((match = FILE_OPEN.exec(text)) !== null) {
-    const path = match[1].replace(/^\.?\//, "").trim();
+    const path = (match[1] ?? "").replace(/^\.?\//, "").trim();
     const start = match.index + match[0].length;
     const end = text.indexOf("</file>", start);
     const content = (end === -1 ? text.slice(start) : text.slice(start, end)).replace(/^\n/, "");
