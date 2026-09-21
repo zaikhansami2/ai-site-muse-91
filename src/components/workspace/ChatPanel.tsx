@@ -20,7 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { Status } from "@/hooks/use-builder";
+import type { Status, UiMode } from "@/hooks/use-builder";
 import { stripFiles } from "@/lib/files";
 import type { Mode } from "@/lib/prompts";
 import type { ChatMessage, Project } from "@/lib/storage";
@@ -40,11 +40,13 @@ import {
   Plus,
   Trash2,
   Video,
+  Wand2,
   X,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-const MODES: { key: Mode; label: string; icon: typeof MessageSquare }[] = [
+const MODES: { key: UiMode; label: string; icon: typeof MessageSquare }[] = [
+  { key: "auto", label: "Auto", icon: Wand2 },
   { key: "chat", label: "Chat", icon: MessageSquare },
   { key: "plan", label: "Plan", icon: ListChecks },
   { key: "build", label: "Builder", icon: Hammer },
@@ -62,6 +64,7 @@ export function ChatPanel({
   projects,
   activeId,
   mode,
+  lastMode,
   setMode,
   research,
   setResearch,
@@ -78,8 +81,9 @@ export function ChatPanel({
   messages: ChatMessage[];
   projects: Project[];
   activeId: string | null;
-  mode: Mode;
-  setMode: (mode: Mode) => void;
+  mode: UiMode;
+  lastMode: Mode;
+  setMode: (mode: UiMode) => void;
   research: boolean;
   setResearch: (value: boolean) => void;
   status: Status;
@@ -195,6 +199,11 @@ export function ChatPanel({
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="gap-2 font-semibold">
                   {MODES.find((item) => item.key === mode)?.label}
+                  {mode === "auto" && (
+                    <span className="text-xs font-normal text-muted-foreground">
+                      {lastMode === "build" ? "Builder" : lastMode === "plan" ? "Plan" : "Chat"}
+                    </span>
+                  )}
                   <ChevronDown className="size-4 text-muted-foreground" />
                 </Button>
               </DropdownMenuTrigger>
@@ -330,7 +339,9 @@ export function ChatPanel({
               value={input}
               onChange={(event) => setInput(event.target.value)}
               placeholder={
-                mode === "build"
+                mode === "auto"
+                  ? "Ask, plan or describe a website — Forge picks the right mode…"
+                  : mode === "build"
                   ? "Describe the website you want to build…"
                   : mode === "plan"
                     ? "What should we plan?"
@@ -353,7 +364,13 @@ export function ChatPanel({
                   <Globe2 />
                 </PromptInputButton>
                 <span className="ml-1 text-xs text-muted-foreground">
-                  {mode === "build" ? "Builder" : mode === "plan" ? "Plan" : "Chat"}
+                  {mode === "auto"
+                    ? "Auto mode"
+                    : mode === "build"
+                      ? "Builder"
+                      : mode === "plan"
+                        ? "Plan"
+                        : "Chat"}
                 </span>
               </PromptInputTools>
               <PromptInputSubmit
