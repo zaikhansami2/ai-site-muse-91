@@ -98,6 +98,12 @@ export function useBuilder() {
     setStatus("idle");
   }, []);
 
+  // Switching chats reopens the workspace only when that chat already has a site.
+  useEffect(() => {
+    setBuilderOpen((projects.find((p) => p.id === activeId)?.files.length ?? 0) > 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeId]);
+
   const hasFilesRef = useRef(false);
   useEffect(() => {
     hasFilesRef.current = (active?.files?.length ?? 0) > 0;
