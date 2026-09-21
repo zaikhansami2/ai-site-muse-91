@@ -1,4 +1,5 @@
 import { Download, Github, Plus, Rocket, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,36 @@ export function TopBar({
   onRename: (name: string) => void;
   files: ProjectFile[];
 }) {
+  const [deploying, setDeploying] = useState(false);
+
+  const deploy = async () => {
+    if (files.length === 0) {
+      toast.error("Generate a site first — there is nothing to publish.");
+      return;
+    }
+    setDeploying(true);
+    const toastId = toast.loading("Publishing to Netlify…");
+    try {
+      const response = await fetch("/api/deploy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: active?.name ?? "forge-site", files }),
+      });
+      const data = (await response.json()) as { url?: string; error?: string };
+      if (!response.ok || !data.url) throw new Error(data.error ?? "Publishing failed.");
+      toast.success("Your site is live", {
+        id: toastId,
+        description: data.url,
+        action: { label: "Open", onClick: () => window.open(data.url, "_blank") },
+        duration: 15000,
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Publishing failed.", { id: toastId });
+    } finally {
+      setDeploying(false);
+    }
+  };
+
   const download = async () => {
     if (files.length === 0) {
       toast.error("Generate a site first — there are no files to export.");
