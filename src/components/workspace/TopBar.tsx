@@ -102,13 +102,9 @@ export function TopBar({
           <Github className="size-4" />
           <span className="hidden md:inline">Push</span>
         </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => toast("GitHub push and Netlify deploy are coming in the next pass.")}
-        >
-          <Rocket className="size-4" />
-          <span className="hidden md:inline">Deploy</span>
+        <Button variant="ghost" size="sm" disabled={deploying} onClick={deploy}>
+          <Rocket className={deploying ? "size-4 animate-pulse" : "size-4"} />
+          <span className="hidden md:inline">{deploying ? "Publishing…" : "Deploy"}</span>
         </Button>
         <Button size="sm" onClick={download}>
           <Download className="size-4" />
