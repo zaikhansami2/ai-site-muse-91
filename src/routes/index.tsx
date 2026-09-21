@@ -114,7 +114,7 @@ function Workspace() {
           alt="Workspace background"
         />
       )}
-      <div className="absolute inset-0 bg-background/42" />
+      <div className="absolute inset-0 bg-background/20" />
 
       <div className="relative z-10 flex h-full flex-col">
         {builder.mode !== "build" ? (

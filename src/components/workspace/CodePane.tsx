@@ -120,7 +120,7 @@ export function CodePane({
             </Button>
           </div>
         </div>
-        <pre className="flex-1 overflow-auto bg-[oklch(0.14_0.012_265)] p-4 text-xs leading-relaxed">
+        <pre className="flex-1 overflow-auto bg-surface-raised p-4 text-xs leading-relaxed">
           <code className="font-mono text-foreground/90">{current?.content}</code>
         </pre>
       </div>

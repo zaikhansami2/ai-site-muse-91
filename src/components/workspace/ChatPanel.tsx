@@ -121,7 +121,7 @@ export function ChatPanel({
     <div className="relative flex h-full min-h-0 overflow-hidden">
       <aside
         className={cn(
-          "relative z-20 flex shrink-0 flex-col border-r border-border/70 bg-background/80 backdrop-blur-xl transition-[width] duration-200",
+          "relative z-20 flex shrink-0 flex-col border-r border-border/70 bg-background/72 backdrop-blur-xl transition-[width] duration-200",
           sidebarOpen ? "w-64" : "w-0 overflow-hidden border-r-0",
         )}
       >
@@ -178,7 +178,7 @@ export function ChatPanel({
         </div>
       </aside>
 
-      <main className="relative z-10 flex min-w-0 flex-1 flex-col bg-background/65 backdrop-blur-sm">
+      <main className="relative z-10 flex min-w-0 flex-1 flex-col bg-background/48 backdrop-blur-[2px]">
         <header className="flex h-16 shrink-0 items-center justify-between border-b border-border/70 px-4">
           <div className="flex items-center gap-2">
             {!sidebarOpen && (
@@ -305,7 +305,7 @@ export function ChatPanel({
           <ConversationScrollButton />
         </Conversation>
 
-        <div className="absolute inset-x-0 bottom-0 z-20 bg-background/80 px-4 pb-4 pt-3 backdrop-blur-xl">
+        <div className="absolute inset-x-0 bottom-0 z-20 bg-background/72 px-4 pb-4 pt-3 backdrop-blur-xl">
           <PromptInput
             accept="image/*"
             maxFiles={1}
