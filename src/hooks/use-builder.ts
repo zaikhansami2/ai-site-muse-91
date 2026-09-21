@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { parseFiles, type ProjectFile } from "@/lib/files";
+import { detectMode } from "@/lib/intent";
 import type { Mode } from "@/lib/prompts";
 import { loadProjects, newProject, saveProjects, type ChatMessage, type Project } from "@/lib/storage";
 
@@ -9,7 +10,9 @@ export type Status = "idle" | "analyzing" | "building" | "formatting" | "error";
 export function useBuilder() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [mode, setMode] = useState<Mode>("chat");
+  const [mode, setMode] = useState<UiMode>("auto");
+  const [lastMode, setLastMode] = useState<Mode>("chat");
+  const [builderOpen, setBuilderOpen] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
