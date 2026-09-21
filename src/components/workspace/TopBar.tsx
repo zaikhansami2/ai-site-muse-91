@@ -9,6 +9,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ShowcaseDialog } from "@/components/workspace/ShowcaseDialog";
+import { WidgetDialog } from "@/components/workspace/WidgetDialog";
 import type { ProjectFile } from "@/lib/files";
 import type { Project } from "@/lib/storage";
 
@@ -19,6 +21,8 @@ export function TopBar({
   onCreate,
   onDelete,
   onRename,
+  onFilesChange,
+  onThumbnail,
   files,
 }: {
   projects: Project[];
@@ -27,10 +31,45 @@ export function TopBar({
   onCreate: () => void;
   onDelete: (id: string) => void;
   onRename: (name: string) => void;
+  onFilesChange: (files: ProjectFile[]) => void;
+  onThumbnail: (dataUrl: string) => void;
   files: ProjectFile[];
 }) {
   const [deploying, setDeploying] = useState(false);
   const [booting, setBooting] = useState(false);
+  const [pushing, setPushing] = useState(false);
+
+  const pushToGithub = async () => {
+    if (files.length === 0) {
+      toast.error("Generate a site first — there is nothing to push.");
+      return;
+    }
+    setPushing(true);
+    const toastId = toast.loading("Pushing to GitHub…");
+    try {
+      const response = await fetch("/api/github", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          repo: active?.name ?? "forge-site",
+          description: `${active?.name ?? "Website"} — built with Forge`,
+          files,
+        }),
+      });
+      const data = (await response.json()) as { url?: string; repo?: string; error?: string };
+      if (!response.ok || !data.url) throw new Error(data.error ?? "The push failed.");
+      toast.success(`Pushed to ${data.repo}`, {
+        id: toastId,
+        description: data.url,
+        action: { label: "Open", onClick: () => window.open(data.url, "_blank") },
+        duration: 15000,
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "The push failed.", { id: toastId });
+    } finally {
+      setPushing(false);
+    }
+  };
 
   const runSandbox = async () => {
     if (files.length === 0) {
@@ -156,13 +195,20 @@ export function TopBar({
           <Plus className="size-4" />
           New
         </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => toast("GitHub push and Netlify deploy are coming in the next pass.")}
-        >
-          <Github className="size-4" />
-          <span className="hidden md:inline">Push</span>
+        <WidgetDialog
+          files={files}
+          siteName={active?.name ?? "This site"}
+          onApply={onFilesChange}
+        />
+        <ShowcaseDialog
+          files={files}
+          siteName={active?.name ?? "Website"}
+          {...(active?.thumbnail ? { thumbnail: active.thumbnail } : {})}
+          onThumbnail={onThumbnail}
+        />
+        <Button variant="ghost" size="sm" disabled={pushing} onClick={pushToGithub}>
+          <Github className={pushing ? "size-4 animate-pulse" : "size-4"} />
+          <span className="hidden md:inline">{pushing ? "Pushing…" : "Push"}</span>
         </Button>
         <Button variant="ghost" size="sm" disabled={booting} onClick={runSandbox}>
           <Terminal className={booting ? "size-4 animate-pulse" : "size-4"} />

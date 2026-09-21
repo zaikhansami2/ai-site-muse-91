@@ -61,6 +61,8 @@ function Workspace() {
         onCreate={builder.createProject}
         onDelete={builder.deleteProject}
         onRename={builder.renameProject}
+        onFilesChange={builder.setFiles}
+        onThumbnail={builder.setThumbnail}
         files={files}
       />
 
@@ -70,6 +72,8 @@ function Workspace() {
             messages={builder.active?.messages ?? []}
             mode={builder.mode}
             setMode={builder.setMode}
+            research={builder.research}
+            setResearch={builder.setResearch}
             status={builder.status}
             error={builder.error}
             busy={busy}
@@ -108,7 +112,7 @@ function Workspace() {
 
             <div className="min-h-0 flex-1">
               {tab === "preview" && <PreviewPane files={files} />}
-              {tab === "code" && <CodePane files={files} />}
+              {tab === "code" && <CodePane files={files} onFilesChange={builder.setFiles} />}
               {tab === "canvas" && (
                 <SketchCanvas
                   busy={busy}

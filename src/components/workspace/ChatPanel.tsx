@@ -2,6 +2,7 @@ import { motion } from "motion/react";
 import { marked } from "marked";
 import {
   ArrowUp,
+  Globe,
   ImagePlus,
   Loader2,
   MessageSquare,
@@ -44,6 +45,8 @@ export function ChatPanel({
   messages,
   mode,
   setMode,
+  research,
+  setResearch,
   status,
   error,
   busy,
@@ -53,6 +56,8 @@ export function ChatPanel({
   messages: ChatMessage[];
   mode: Mode;
   setMode: (mode: Mode) => void;
+  research: boolean;
+  setResearch: (value: boolean) => void;
   status: Status;
   error: string | null;
   busy: boolean;
@@ -185,6 +190,16 @@ export function ChatPanel({
               <Button variant="ghost" size="sm" onClick={() => fileRef.current?.click()}>
                 <ImagePlus className="size-4" />
                 Screenshot
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                title="Search the live web and read competitor pages before answering"
+                onClick={() => setResearch(!research)}
+                className={cn(research && "bg-primary/15 text-primary hover:text-primary")}
+              >
+                <Globe className="size-4" />
+                Web
               </Button>
             </div>
             {busy ? (
