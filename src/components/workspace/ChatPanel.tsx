@@ -98,6 +98,7 @@ export function ChatPanel({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [input, setInput] = useState("");
+  const [attachment, setAttachment] = useState<{ url: string; name: string } | null>(null);
   const uploadRef = useRef<HTMLInputElement | null>(null);
   const backgroundRef = useRef<HTMLInputElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -107,15 +108,18 @@ export function ChatPanel({
   }, [busy, activeId]);
 
   const submit = async (text: string, image?: string) => {
-    if (busy || (!text.trim() && !image)) return;
-    onSend(text, image);
+    const file = image ?? attachment?.url;
+    if (busy || (!text.trim() && !file)) return;
+    onSend(text, file);
     setInput("");
+    setAttachment(null);
   };
 
-  const submitImage = (file: File | undefined) => {
+  // Attaching an image only stages it — nothing is sent until the user hits send.
+  const attachImage = (file: File | undefined) => {
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => void submit(input, String(reader.result));
+    reader.onload = () => setAttachment({ url: String(reader.result), name: file.name });
     reader.readAsDataURL(file);
   };
 
@@ -334,6 +338,26 @@ export function ChatPanel({
               }
             }}
           >
+            {attachment && (
+              <div className="flex items-center gap-2 px-3 pt-3">
+                <img
+                  src={attachment.url}
+                  alt={attachment.name}
+                  className="size-14 rounded-md border border-border object-cover"
+                />
+                <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
+                  {attachment.name} — attached, press send when ready
+                </span>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  title="Remove attachment"
+                  onClick={() => setAttachment(null)}
+                >
+                  <X />
+                </Button>
+              </div>
+            )}
             <PromptInputTextarea
               ref={textareaRef}
               value={input}
@@ -376,7 +400,7 @@ export function ChatPanel({
               <PromptInputSubmit
                 status={chatStatus}
                 onStop={onStop}
-                disabled={!busy && !input.trim()}
+                disabled={!busy && !input.trim() && !attachment}
               />
             </PromptInputFooter>
           </PromptInput>
@@ -385,7 +409,10 @@ export function ChatPanel({
             hidden
             type="file"
             accept="image/*"
-            onChange={(event) => submitImage(event.target.files?.[0])}
+            onChange={(event) => {
+              attachImage(event.target.files?.[0]);
+              event.currentTarget.value = "";
+            }}
           />
           <p className="mx-auto mt-2 max-w-3xl text-center text-[11px] text-muted-foreground">
             Forge can make mistakes. Check important details.
