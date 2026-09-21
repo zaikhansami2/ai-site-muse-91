@@ -32,19 +32,22 @@ export function useBuilder() {
     [projects, activeId],
   );
 
-  const patchActive = useCallback(
-    (patch: (project: Project) => Project) => {
-      setActiveId((id) => {
-        setProjects((list) =>
-          list.map((project) =>
-            project.id === id ? { ...patch(project), updatedAt: Date.now() } : project,
-          ),
-        );
-        return id;
-      });
-    },
-    [],
-  );
+  // activeId lives in a ref so patchActive never nests a setState inside another
+  // updater — React would replay that updater and duplicate appended messages.
+  const activeIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    activeIdRef.current = activeId;
+  }, [activeId]);
+
+  const patchActive = useCallback((patch: (project: Project) => Project) => {
+    const id = activeIdRef.current;
+    if (!id) return;
+    setProjects((list) =>
+      list.map((project) =>
+        project.id === id ? { ...patch(project), updatedAt: Date.now() } : project,
+      ),
+    );
+  }, []);
 
   const createProject = useCallback(() => {
     const project = newProject();

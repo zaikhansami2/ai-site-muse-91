@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiDeployRouteImport } from './routes/api/deploy'
+import { Route as ApiSandboxRouteImport } from './routes/api/sandbox'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,35 +29,44 @@ const ApiDeployRoute = ApiDeployRouteImport.update({
   path: '/api/deploy',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSandboxRoute = ApiSandboxRouteImport.update({
+  id: '/api/sandbox',
+  path: '/api/sandbox',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/chat': typeof ApiChatRoute
   '/api/deploy': typeof ApiDeployRoute
+  '/api/sandbox': typeof ApiSandboxRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/chat': typeof ApiChatRoute
   '/api/deploy': typeof ApiDeployRoute
+  '/api/sandbox': typeof ApiSandboxRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api/chat': typeof ApiChatRoute
   '/api/deploy': typeof ApiDeployRoute
+  '/api/sandbox': typeof ApiSandboxRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/chat' | '/api/deploy'
+  fullPaths: '/' | '/api/chat' | '/api/deploy' | '/api/sandbox'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/chat' | '/api/deploy'
-  id: '__root__' | '/' | '/api/chat' | '/api/deploy'
+  to: '/' | '/api/chat' | '/api/deploy' | '/api/sandbox'
+  id: '__root__' | '/' | '/api/chat' | '/api/deploy' | '/api/sandbox'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiDeployRoute: typeof ApiDeployRoute
+  ApiSandboxRoute: typeof ApiSandboxRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +92,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDeployRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/sandbox': {
+      id: '/api/sandbox'
+      path: '/api/sandbox'
+      fullPath: '/api/sandbox'
+      preLoaderRoute: typeof ApiSandboxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +106,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiChatRoute: ApiChatRoute,
   ApiDeployRoute: ApiDeployRoute,
+  ApiSandboxRoute: ApiSandboxRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
