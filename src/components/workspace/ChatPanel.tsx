@@ -342,10 +342,10 @@ export function ChatPanel({
                 mode === "auto"
                   ? "Ask, plan or describe a website — Forge picks the right mode…"
                   : mode === "build"
-                  ? "Describe the website you want to build…"
-                  : mode === "plan"
-                    ? "What should we plan?"
-                    : "Message Forge…"
+                    ? "Describe the website you want to build…"
+                    : mode === "plan"
+                      ? "What should we plan?"
+                      : "Message Forge…"
               }
             />
             <PromptInputFooter>

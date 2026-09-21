@@ -52,6 +52,7 @@ function Workspace() {
     custom: false,
   });
   const files = builder.active?.files ?? [];
+  const showBuilder = builder.mode === "build" || builder.builderOpen;
   const busy = builder.status !== "idle" && builder.status !== "error";
 
   useEffect(
@@ -78,14 +79,19 @@ function Workspace() {
       projects={builder.projects}
       activeId={builder.activeId}
       mode={builder.mode}
-      setMode={builder.setMode}
+      lastMode={builder.lastMode}
+      setMode={(next) => {
+        builder.setMode(next);
+        if (next === "build") builder.setBuilderOpen(true);
+        if (next === "chat" || next === "plan") builder.setBuilderOpen(false);
+      }}
       research={builder.research}
       setResearch={builder.setResearch}
       status={builder.status}
       error={builder.error}
       busy={busy}
       onSend={(text, image) => {
-        if (builder.mode === "build") setTab("preview");
+        setTab("preview");
         void builder.send(text, image ? { image } : undefined);
       }}
       onStop={builder.stop}
@@ -117,7 +123,7 @@ function Workspace() {
       <div className="absolute inset-0 bg-background/20" />
 
       <div className="relative z-10 flex h-full flex-col">
-        {builder.mode !== "build" ? (
+        {!showBuilder ? (
           chat
         ) : (
           <>

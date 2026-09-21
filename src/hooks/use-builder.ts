@@ -3,7 +3,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { parseFiles, type ProjectFile } from "@/lib/files";
 import { detectMode } from "@/lib/intent";
 import type { Mode } from "@/lib/prompts";
-import { loadProjects, newProject, saveProjects, type ChatMessage, type Project } from "@/lib/storage";
+import {
+  loadProjects,
+  newProject,
+  saveProjects,
+  type ChatMessage,
+  type Project,
+} from "@/lib/storage";
 
 export type Status = "idle" | "analyzing" | "building" | "formatting" | "error";
 
@@ -124,9 +130,7 @@ export function useBuilder() {
         return {
           ...project,
           name:
-            project.messages.length === 0 && text.trim()
-              ? text.trim().slice(0, 48)
-              : project.name,
+            project.messages.length === 0 && text.trim() ? text.trim().slice(0, 48) : project.name,
           messages: [
             ...history,
             { id: assistantId, role: "assistant", content: "", mode: requestMode },
