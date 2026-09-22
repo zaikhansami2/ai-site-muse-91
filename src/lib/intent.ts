@@ -29,6 +29,8 @@ const BUILD_PATTERNS = [
   /\brecreate\b/i,
   /\b(bana|banao|banado|bana do|banadu|banaye|likho|likh do|kar do|kardo)\b/i,
   /\bchahiye\b/i,
+  // Document deliverables (Word, Excel, PowerPoint, PDF) are build requests too.
+  /\b(word|docx|excel|xlsx|spreadsheet|powerpoint|pptx|slides?|pdf|invoice|quotation|proposal|company profile|report|cv|resume|brochure|price list)\b/i,
 ];
 
 const EDIT_PATTERNS = [

@@ -21,7 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Status, UiMode } from "@/hooks/use-builder";
-import { parseClarify, stripFiles } from "@/lib/files";
+import { parseClarify, parseFiles, stripFiles } from "@/lib/files";
 import type { Mode } from "@/lib/prompts";
 import type { ChatMessage, Project } from "@/lib/storage";
 import { cn } from "@/lib/utils";
@@ -29,6 +29,7 @@ import {
   Bot,
   Check,
   ChevronDown,
+  FileCode2,
   Globe2,
   Hammer,
   HelpCircle,
@@ -130,6 +131,8 @@ export function ChatPanel({
   // we show a choice card instead of plain text.
   const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
   const clarify = !busy && lastAssistant ? parseClarify(lastAssistant.content) : null;
+  // Live "what am I writing right now" feed while the build streams in.
+  const streamingFiles = busy && lastAssistant ? parseFiles(lastAssistant.content) : [];
 
   return (
     <div className="relative flex h-full min-h-0 overflow-hidden">
@@ -326,14 +329,37 @@ export function ChatPanel({
               </div>
             )}
             {busy && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="mt-2 rounded-lg border border-border bg-background/85 p-3 text-sm shadow-sm">
                 <Shimmer>
                   {status === "analyzing"
-                    ? "Thinking…"
+                    ? "Thinking about your request…"
                     : status === "formatting"
-                      ? "Finishing your site…"
-                      : "Creating…"}
+                      ? "Tidying up the code…"
+                      : streamingFiles.length > 0
+                        ? `Writing ${streamingFiles[streamingFiles.length - 1]!.path}…`
+                        : "Creating…"}
                 </Shimmer>
+                {streamingFiles.length > 0 && (
+                  <ul className="mt-2 space-y-1">
+                    {streamingFiles.map((file, index) => {
+                      const done = index < streamingFiles.length - 1;
+                      return (
+                        <li
+                          key={file.path}
+                          className="flex items-center gap-2 text-xs text-muted-foreground"
+                        >
+                          {done ? (
+                            <Check className="size-3.5 text-primary" />
+                          ) : (
+                            <FileCode2 className="size-3.5 animate-pulse text-primary" />
+                          )}
+                          <span className="font-mono">{file.path}</span>
+                          <span className="ml-auto">{file.content.split("\n").length} lines</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
               </div>
             )}
             {error && (

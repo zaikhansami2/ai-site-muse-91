@@ -73,7 +73,9 @@ export const Route = createFileRoute("/api/chat")({
             providerOptions: {
               openai: {
                 forceReasoning: true,
-                reasoningEffort: mode === "chat" ? "low" : "medium",
+                // Low effort across the board: same quality of output for a
+                // static site, noticeably faster and cheaper per build.
+                reasoningEffort: "low",
                 store: false,
               },
             },
