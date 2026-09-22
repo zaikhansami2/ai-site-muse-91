@@ -113,9 +113,11 @@ export function useBuilder() {
   }, [activeId]);
 
   const hasFilesRef = useRef(false);
+  const hasDocsRef = useRef(false);
   const projectsRef = useRef<Project[]>([]);
   useEffect(() => {
     hasFilesRef.current = (active?.files?.length ?? 0) > 0;
+    hasDocsRef.current = (active?.docs?.length ?? 0) > 0;
     projectsRef.current = projects;
   }, [active, projects]);
 
