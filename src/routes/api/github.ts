@@ -87,7 +87,10 @@ export const Route = createFileRoute("/api/github")({
                 (created.data?.errors?.[0]?.message as string) ??
                 (created.data?.message as string) ??
                 `status ${created.status}`;
-              return Response.json({ error: `Could not create the repository: ${message}` }, { status: 502 });
+              return Response.json(
+                { error: `Could not create the repository: ${message}` },
+                { status: 502 },
+              );
             }
             existing = created;
           }
@@ -146,7 +149,8 @@ export const Route = createFileRoute("/api/github")({
               })),
             }),
           });
-          if (!tree.ok) return Response.json({ error: "Could not build the commit." }, { status: 502 });
+          if (!tree.ok)
+            return Response.json({ error: "Could not build the commit." }, { status: 502 });
 
           const commit = await call(`repos/${owner}/${repo}/git/commits`, {
             method: "POST",
@@ -156,7 +160,8 @@ export const Route = createFileRoute("/api/github")({
               parents: parent ? [parent] : [],
             }),
           });
-          if (!commit.ok) return Response.json({ error: "Could not create the commit." }, { status: 502 });
+          if (!commit.ok)
+            return Response.json({ error: "Could not create the commit." }, { status: 502 });
 
           const refBody = JSON.stringify({ sha: commit.data.sha, force: true });
           const updated = head.ok
@@ -168,7 +173,8 @@ export const Route = createFileRoute("/api/github")({
                 method: "POST",
                 body: JSON.stringify({ ref: `refs/heads/${branch}`, sha: commit.data.sha }),
               });
-          if (!updated.ok) return Response.json({ error: "Could not push the commit." }, { status: 502 });
+          if (!updated.ok)
+            return Response.json({ error: "Could not push the commit." }, { status: 502 });
 
           return Response.json({
             url: `https://github.com/${owner}/${repo}`,

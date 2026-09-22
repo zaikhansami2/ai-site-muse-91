@@ -22,7 +22,10 @@ export const Route = createFileRoute("/api/public/widget-lead")({
         const body = (await request.json()) as Body;
         const email = (body.email ?? "").trim();
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-          return Response.json({ error: "A valid email is required." }, { status: 400, headers: cors });
+          return Response.json(
+            { error: "A valid email is required." },
+            { status: 400, headers: cors },
+          );
         }
 
         const lead = {
