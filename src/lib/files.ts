@@ -31,6 +31,7 @@ export function stripFiles(text: string): string {
   return text
     .replace(/<file path="[^"]*">[\s\S]*?(<\/file>|$)/g, "")
     .replace(/<clarify>[\s\S]*?(<\/clarify>|$)/g, "")
+    .replace(/<doc>[\s\S]*?(<\/doc>|$)/g, "")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }

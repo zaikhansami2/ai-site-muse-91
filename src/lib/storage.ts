@@ -1,3 +1,4 @@
+import type { DocSpec } from "./docs";
 import type { Asset, ProjectFile } from "./files";
 import type { Mode } from "./prompts";
 
@@ -18,6 +19,8 @@ export type Project = {
   thumbnail?: string;
   /** Images the user uploaded to be used inside the site. */
   assets?: Asset[];
+  /** Office documents (Word/Excel/PowerPoint/PDF) generated for this chat. */
+  docs?: DocSpec[];
 };
 
 const KEY = "forgeui.projects.v1";
