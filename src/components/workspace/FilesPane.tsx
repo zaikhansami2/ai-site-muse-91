@@ -3,7 +3,15 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { DOC_LABEL, downloadDoc, downloadFile, type DocFormat, type DocSpec } from "@/lib/docs";
+import {
+  DOC_LABEL,
+  downloadDoc,
+  downloadFile,
+  resolveDocImage,
+  type DocAsset,
+  type DocFormat,
+  type DocSpec,
+} from "@/lib/docs";
 import type { ProjectFile } from "@/lib/files";
 
 const FORMAT_ICON: Record<DocFormat, typeof FileText> = {
