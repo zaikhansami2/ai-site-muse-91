@@ -103,8 +103,11 @@ ${FILE_FORMAT}
 
 ${LIBRARY_KIT}
 
+${DOCUMENT_KIT}
+
 ${CLARIFY_PROTOCOL}
 
+Work fast: no long preamble, no explanation of your reasoning, no repeated code. Emit only files that must change.
 Before the files, write one short sentence describing what you built. After the files, stop.`;
 }
 
