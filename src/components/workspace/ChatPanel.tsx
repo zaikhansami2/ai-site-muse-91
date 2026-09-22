@@ -296,6 +296,29 @@ export function ChatPanel({
                 </Message>
               ))
             )}
+            {clarify && (
+              <div className="mt-2 rounded-lg border border-border bg-background/90 p-4 shadow-sm">
+                <p className="flex items-start gap-2 text-sm font-medium">
+                  <HelpCircle className="mt-0.5 size-4 shrink-0 text-primary" />
+                  {clarify.question}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {clarify.options.map((option) => (
+                    <Button
+                      key={option}
+                      size="sm"
+                      variant="outline"
+                      onClick={() => void submit(option)}
+                    >
+                      {option}
+                    </Button>
+                  ))}
+                </div>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Or just type your own answer below.
+                </p>
+              </div>
+            )}
             {busy && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Shimmer>
@@ -328,7 +351,12 @@ export function ChatPanel({
                   .then((response) => response.blob())
                   .then((blob) => {
                     const reader = new FileReader();
-                    reader.onload = () => void submit(message.text, String(reader.result));
+                    reader.onload = () =>
+                      void submit(
+                        message.text,
+                        String(reader.result),
+                        message.files[0]?.filename ?? "upload",
+                      );
                     reader.readAsDataURL(blob);
                   });
               } else {
