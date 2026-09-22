@@ -89,7 +89,11 @@ const ASSET_PATTERNS = [
  */
 export function detectAssetIntent(text: string, context?: { hasFiles?: boolean }): boolean {
   const value = text.trim();
-  if (/\b(recreate|clone|copy this design|like this design|reference|jaisa banao|aisa banao)\b/i.test(value))
+  if (
+    /\b(recreate|clone|copy this design|like this design|reference|jaisa banao|aisa banao)\b/i.test(
+      value,
+    )
+  )
     return false;
   if (matches(ASSET_PATTERNS, value)) return true;
   // An image dropped onto an existing site is almost always content to place.

@@ -97,10 +97,7 @@ export function buildPreviewDocument(files: ProjectFile[]): string {
   for (const file of files) {
     if (file.path.endsWith(".css")) {
       const name = file.path.split("/").pop()!;
-      const link = new RegExp(
-        `<link[^>]*href=["'][^"']*${escapeRe(name)}["'][^>]*>`,
-        "gi",
-      );
+      const link = new RegExp(`<link[^>]*href=["'][^"']*${escapeRe(name)}["'][^>]*>`, "gi");
       html = html.replace(link, `<style>\n${file.content}\n</style>`);
     }
     if (file.path.endsWith(".js")) {

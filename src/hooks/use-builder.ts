@@ -233,8 +233,7 @@ export function useBuilder() {
           }
 
           const snapshot = acc;
-          const parsed =
-            requestMode === "build" ? applyAssets(parseFiles(snapshot), assets) : null;
+          const parsed = requestMode === "build" ? applyAssets(parseFiles(snapshot), assets) : null;
           patchActive((project) => ({
             ...project,
             messages: project.messages.map((m) =>

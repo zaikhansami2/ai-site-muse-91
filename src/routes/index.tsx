@@ -182,9 +182,7 @@ function Workspace() {
                     )}
                   </div>
                   <div className="min-h-0 flex-1">
-                    {tab === "preview" && (
-                      <PreviewPane files={files} building={busy} />
-                    )}
+                    {tab === "preview" && <PreviewPane files={files} building={busy} />}
                     {tab === "code" && (
                       <Suspense fallback={<PaneFallback />}>
                         <CodePane files={files} onFilesChange={builder.setFiles} />
