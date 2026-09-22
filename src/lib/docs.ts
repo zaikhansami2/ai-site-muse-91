@@ -15,6 +15,9 @@ export type DocSection = {
   paragraphs?: string[];
   bullets?: string[];
   table?: DocTable;
+  /** __ASSET_n__ token or image URL shown inside this section. */
+  image?: string;
+  imageCaption?: string;
 };
 
 export type DocSpec = {
@@ -24,8 +27,20 @@ export type DocSpec = {
   formats: DocFormat[];
   title: string;
   subtitle?: string;
+  /** __ASSET_n__ token for a logo / cover image on the first page. */
+  logo?: string;
   sections: DocSection[];
 };
+
+export type DocAsset = { token: string; url: string };
+
+/** Turns __ASSET_n__ tokens inside a document into the real uploaded image. */
+export function resolveDocImage(value: string | undefined, assets: DocAsset[]): string | null {
+  if (!value) return null;
+  const asset = assets.find((item) => value.includes(item.token));
+  if (asset) return asset.url;
+  return /^(data:|https?:)/.test(value) ? value : null;
+}
 
 const DOC_BLOCK = /<doc>([\s\S]*?)<\/doc>/g;
 
@@ -58,6 +73,7 @@ export function parseDocs(text: string): DocSpec[] {
         name: slug(String(raw.name ?? title)),
         title,
         ...(raw.subtitle ? { subtitle: String(raw.subtitle) } : {}),
+        ...(raw.logo ? { logo: String(raw.logo) } : {}),
         formats: formats.length > 0 ? formats : ["pdf"],
         sections: Array.isArray(raw.sections) ? (raw.sections as DocSection[]) : [],
       });
