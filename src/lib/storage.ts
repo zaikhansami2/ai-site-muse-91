@@ -1,4 +1,4 @@
-import type { ProjectFile } from "./files";
+import type { Asset, ProjectFile } from "./files";
 import type { Mode } from "./prompts";
 
 export type ChatMessage = {
@@ -16,6 +16,8 @@ export type Project = {
   messages: ChatMessage[];
   files: ProjectFile[];
   thumbnail?: string;
+  /** Images the user uploaded to be used inside the site. */
+  assets?: Asset[];
 };
 
 const KEY = "forgeui.projects.v1";
