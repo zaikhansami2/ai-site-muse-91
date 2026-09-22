@@ -288,9 +288,7 @@ export function ChatPanel({
                       />
                     )}
                     {message.role === "assistant" ? (
-                      <MessageResponse>
-                        {message.mode === "build" ? stripFiles(message.content) : message.content}
-                      </MessageResponse>
+                      <MessageResponse>{stripFiles(message.content)}</MessageResponse>
                     ) : (
                       <p className="whitespace-pre-wrap">{message.content}</p>
                     )}
