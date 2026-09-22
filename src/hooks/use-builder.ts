@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { parseFiles, stripFiles, type ProjectFile } from "@/lib/files";
-import { detectMode, detectResearch } from "@/lib/intent";
+import {
+  applyAssets,
+  maskAssets,
+  parseFiles,
+  stripFiles,
+  type Asset,
+  type ProjectFile,
+} from "@/lib/files";
+import { detectAssetIntent, detectMode, detectResearch } from "@/lib/intent";
 import type { Mode } from "@/lib/prompts";
 import {
   loadProjects,
