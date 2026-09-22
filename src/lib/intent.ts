@@ -82,3 +82,14 @@ export const MODE_LABEL: Record<Mode, string> = {
   plan: "Plan",
   build: "Builder",
 };
+
+const RESEARCH_PATTERNS = [
+  /https?:\/\//i,
+  /\b(competitor|competitors|market|trend|trends|latest|news|pricing of|research|inspired by|like (airbnb|stripe|apple|notion|linear|vercel)|benchmark|statistics|stats)\b/i,
+  /\b(similar to|jaisa|jaisi)\b/i,
+];
+
+/** Turn live web search on by itself when the request clearly needs fresh facts. */
+export function detectResearch(text: string): boolean {
+  return RESEARCH_PATTERNS.some((pattern) => pattern.test(text));
+}

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { streamText, type ModelMessage } from "ai";
 
 import { getLovableModel } from "@/lib/ai-gateway.server";
-import { systemPrompt, type Mode } from "@/lib/prompts";
+import { editContext, systemPrompt, type Mode } from "@/lib/prompts";
 import { researchContext } from "@/lib/research.server";
 
 type IncomingMessage = {
@@ -11,7 +11,12 @@ type IncomingMessage = {
   image?: string;
 };
 
-type Body = { mode?: Mode; messages?: IncomingMessage[]; research?: boolean };
+type Body = {
+  mode?: Mode;
+  messages?: IncomingMessage[];
+  research?: boolean;
+  files?: { path: string; content: string }[];
+};
 
 function toModelMessages(messages: IncomingMessage[]): ModelMessage[] {
   return messages.map((message) => {
@@ -51,10 +56,16 @@ export const Route = createFileRoute("/api/chat")({
           }
         }
 
+        const existing = Array.isArray(body.files) ? body.files : [];
+        const parts = [systemPrompt(mode)];
+        if (mode === "build" && existing.length > 0) parts.push(editContext(existing));
+        if (research) parts.push(research);
+        const system = parts.join("\n\n");
+
         try {
           const result = streamText({
             model: getLovableModel(),
-            system: research ? `${systemPrompt(mode)}\n\n${research}` : systemPrompt(mode),
+            system,
             messages: toModelMessages(messages),
             providerOptions: {
               openai: {
