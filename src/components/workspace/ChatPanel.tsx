@@ -31,6 +31,7 @@ import {
   ChevronDown,
   Globe2,
   Hammer,
+  HelpCircle,
   ImagePlus,
   ListChecks,
   Menu,
