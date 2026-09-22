@@ -113,11 +113,28 @@ export function useBuilder() {
   }, [activeId]);
 
   const hasFilesRef = useRef(false);
+  const hasDocsRef = useRef(false);
   const projectsRef = useRef<Project[]>([]);
   useEffect(() => {
     hasFilesRef.current = (active?.files?.length ?? 0) > 0;
+    hasDocsRef.current = (active?.docs?.length ?? 0) > 0;
     projectsRef.current = projects;
   }, [active, projects]);
+
+  /** Compact JSON of a document, sent back so the model edits it in place. */
+  const specOf = (doc: DocSpec) =>
+    JSON.stringify(
+      {
+        name: doc.name,
+        title: doc.title,
+        ...(doc.subtitle ? { subtitle: doc.subtitle } : {}),
+        ...(doc.logo ? { logo: doc.logo } : {}),
+        formats: doc.formats,
+        sections: doc.sections,
+      },
+      null,
+      2,
+    );
 
   const mergeDocs = (current: DocSpec[], incoming: DocSpec[]): DocSpec[] => {
     const next = [...current];
@@ -145,7 +162,11 @@ export function useBuilder() {
       const requestMode: Mode =
         options?.mode ??
         (mode === "auto"
-          ? detectMode(text, { hasImage: Boolean(options?.image), hasFiles: hasFilesRef.current })
+          ? detectMode(text, {
+              hasImage: Boolean(options?.image),
+              hasFiles: hasFilesRef.current,
+              hasDocs: hasDocsRef.current,
+            })
           : mode);
       if (!text.trim() && !options?.image) return;
       setError(null);
@@ -172,7 +193,9 @@ export function useBuilder() {
       const placeImage =
         requestMode === "build" &&
         Boolean(options?.image) &&
-        detectAssetIntent(text, { hasFiles: baseFiles.length > 0 });
+        detectAssetIntent(text, {
+          hasFiles: baseFiles.length > 0 || (current?.docs?.length ?? 0) > 0,
+        });
       const newAsset: Asset | null = placeImage
         ? {
             token: `__ASSET_${existingAssets.length + 1}__`,
@@ -209,6 +232,9 @@ export function useBuilder() {
             research: research || detectResearch(text),
             ...(requestMode === "build" && baseFiles.length > 0
               ? { files: maskAssets(baseFiles, assets) }
+              : {}),
+            ...(requestMode === "build" && (current?.docs?.length ?? 0) > 0
+              ? { docs: (current?.docs ?? []).map((doc) => ({ id: doc.id, spec: specOf(doc) })) }
               : {}),
             ...(assets.length > 0
               ? { assets: assets.map(({ token, name }) => ({ token, name })) }

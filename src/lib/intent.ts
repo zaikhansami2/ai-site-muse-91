@@ -52,9 +52,12 @@ function matches(patterns: RegExp[], text: string) {
 
 export function detectMode(
   text: string,
-  context?: { hasImage?: boolean; hasFiles?: boolean },
+  context?: { hasImage?: boolean; hasFiles?: boolean; hasDocs?: boolean },
 ): Mode {
   const value = text.trim();
+  // A document in the project behaves like existing project content: follow-up
+  // requests are edits to that deliverable, not new conversations.
+  context = { ...context, hasFiles: Boolean(context?.hasFiles || context?.hasDocs) };
 
   // A design reference or sketch is always a build request.
   if (context?.hasImage) return "build";

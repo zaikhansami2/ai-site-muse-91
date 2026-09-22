@@ -3,7 +3,15 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { DOC_LABEL, downloadDoc, downloadFile, type DocFormat, type DocSpec } from "@/lib/docs";
+import {
+  DOC_LABEL,
+  downloadDoc,
+  downloadFile,
+  resolveDocImage,
+  type DocAsset,
+  type DocFormat,
+  type DocSpec,
+} from "@/lib/docs";
 import type { ProjectFile } from "@/lib/files";
 
 const FORMAT_ICON: Record<DocFormat, typeof FileText> = {
@@ -13,13 +21,21 @@ const FORMAT_ICON: Record<DocFormat, typeof FileText> = {
   pptx: Presentation,
 };
 
-export function FilesPane({ docs, files }: { docs: DocSpec[]; files: ProjectFile[] }) {
+export function FilesPane({
+  docs,
+  files,
+  assets = [],
+}: {
+  docs: DocSpec[];
+  files: ProjectFile[];
+  assets?: DocAsset[];
+}) {
   const [busy, setBusy] = useState<string | null>(null);
 
   const handleDownload = async (spec: DocSpec, format: DocFormat) => {
     setBusy(`${spec.id}:${format}`);
     try {
-      await downloadDoc(spec, format);
+      await downloadDoc(spec, format, assets);
       toast.success(`${spec.name}.${format} downloaded`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not create the file.");
@@ -65,35 +81,56 @@ export function FilesPane({ docs, files }: { docs: DocSpec[]; files: ProjectFile
           <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
             Documents
           </h3>
-          {docs.map((spec) => (
-            <div key={spec.id} className="rounded-xl border border-border bg-card p-4">
-              <p className="font-medium">{spec.title}</p>
-              {spec.subtitle && (
-                <p className="mt-0.5 text-sm text-muted-foreground">{spec.subtitle}</p>
-              )}
-              <p className="mt-1 text-xs text-muted-foreground">
-                {spec.sections.length} section{spec.sections.length === 1 ? "" : "s"}
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {spec.formats.map((format) => {
-                  const Icon = FORMAT_ICON[format];
-                  const loading = busy === `${spec.id}:${format}`;
-                  return (
-                    <Button
-                      key={format}
-                      size="sm"
-                      variant="outline"
-                      disabled={loading}
-                      onClick={() => void handleDownload(spec, format)}
-                    >
-                      {loading ? <Loader2 className="animate-spin" /> : <Icon />}
-                      {DOC_LABEL[format]} .{format}
-                    </Button>
-                  );
-                })}
+          {docs.map((spec) => {
+            const images = [
+              resolveDocImage(spec.logo, assets),
+              ...spec.sections.map((section) => resolveDocImage(section.image, assets)),
+            ].filter((src): src is string => Boolean(src));
+
+            return (
+              <div key={spec.id} className="rounded-xl border border-border bg-card p-4">
+                <p className="font-medium">{spec.title}</p>
+                {spec.subtitle && (
+                  <p className="mt-0.5 text-sm text-muted-foreground">{spec.subtitle}</p>
+                )}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {spec.sections.length} section{spec.sections.length === 1 ? "" : "s"}
+                  {images.length > 0 &&
+                    ` · ${images.length} image${images.length === 1 ? "" : "s"}`}
+                </p>
+                {images.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {images.slice(0, 4).map((src, index) => (
+                      <img
+                        key={index}
+                        src={src}
+                        alt=""
+                        className="size-14 rounded-md border border-border object-cover"
+                      />
+                    ))}
+                  </div>
+                )}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {spec.formats.map((format) => {
+                    const Icon = FORMAT_ICON[format];
+                    const loading = busy === `${spec.id}:${format}`;
+                    return (
+                      <Button
+                        key={format}
+                        size="sm"
+                        variant="outline"
+                        disabled={loading}
+                        onClick={() => void handleDownload(spec, format)}
+                      >
+                        {loading ? <Loader2 className="animate-spin" /> : <Icon />}
+                        {DOC_LABEL[format]} .{format}
+                      </Button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

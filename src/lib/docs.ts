@@ -1,7 +1,8 @@
 /**
  * Office documents. When the user asks for a Word / Excel / PowerPoint / PDF
  * deliverable, the model emits a <doc> block with structured content and the
- * Files tab turns it into a real, downloadable file in the browser.
+ * Files tab turns it into a real, downloadable file in the browser. Uploaded
+ * images are referenced by __ASSET_n__ tokens and embedded into the file.
  */
 
 export type DocFormat = "docx" | "pdf" | "xlsx" | "pptx";
@@ -15,6 +16,9 @@ export type DocSection = {
   paragraphs?: string[];
   bullets?: string[];
   table?: DocTable;
+  /** __ASSET_n__ token or image URL shown inside this section. */
+  image?: string;
+  imageCaption?: string;
 };
 
 export type DocSpec = {
@@ -24,8 +28,20 @@ export type DocSpec = {
   formats: DocFormat[];
   title: string;
   subtitle?: string;
+  /** __ASSET_n__ token for a logo / cover image on the first page. */
+  logo?: string;
   sections: DocSection[];
 };
+
+export type DocAsset = { token: string; url: string };
+
+/** Turns an __ASSET_n__ token inside a document into the real uploaded image. */
+export function resolveDocImage(value: string | undefined, assets: DocAsset[]): string | null {
+  if (!value) return null;
+  const asset = assets.find((item) => value.includes(item.token));
+  if (asset) return asset.url;
+  return /^(data:|https?:)/.test(value) ? value : null;
+}
 
 const DOC_BLOCK = /<doc>([\s\S]*?)<\/doc>/g;
 
@@ -58,6 +74,7 @@ export function parseDocs(text: string): DocSpec[] {
         name: slug(String(raw.name ?? title)),
         title,
         ...(raw.subtitle ? { subtitle: String(raw.subtitle) } : {}),
+        ...(raw.logo ? { logo: String(raw.logo) } : {}),
         formats: formats.length > 0 ? formats : ["pdf"],
         sections: Array.isArray(raw.sections) ? (raw.sections as DocSection[]) : [],
       });
@@ -87,20 +104,107 @@ function download(blob: Blob, filename: string) {
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
-async function buildDocx(spec: DocSpec): Promise<Blob> {
+type LoadedImage = {
+  dataUrl: string;
+  bytes: Uint8Array;
+  width: number;
+  height: number;
+  /** "png" | "jpg" */
+  ext: "png" | "jpg";
+};
+
+/** Loads an image (data URL or remote) and normalises it for the file writers. */
+async function loadImage(source: string, maxWidth = 520): Promise<LoadedImage | null> {
+  try {
+    const response = await fetch(source);
+    const blob = await response.blob();
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(new Error("read failed"));
+      reader.readAsDataURL(blob);
+    });
+
+    const size = await new Promise<{ width: number; height: number }>((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+      img.onerror = () => resolve({ width: maxWidth, height: maxWidth * 0.6 });
+      img.src = dataUrl;
+    });
+
+    const scale = Math.min(1, maxWidth / Math.max(1, size.width));
+    const buffer = await blob.arrayBuffer();
+
+    return {
+      dataUrl,
+      bytes: new Uint8Array(buffer),
+      width: Math.round(size.width * scale),
+      height: Math.round(size.height * scale),
+      ext: blob.type.includes("png") ? "png" : "jpg",
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Re-encodes any image as a JPEG data URL (PDF writer is picky about PNGs). */
+async function toJpeg(dataUrl: string): Promise<string | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const context = canvas.getContext("2d");
+        if (!context) return resolve(null);
+        context.fillStyle = "#ffffff";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL("image/jpeg", 0.92));
+      } catch {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = dataUrl;
+  });
+}
+
+async function buildDocx(spec: DocSpec, assets: DocAsset[]): Promise<Blob> {
   const {
     Document,
     Packer,
     Paragraph,
     TextRun,
+    ImageRun,
     HeadingLevel,
+    AlignmentType,
     Table,
     TableRow,
     TableCell,
     WidthType,
   } = await import("docx");
 
-  const children: unknown[] = [new Paragraph({ text: spec.title, heading: HeadingLevel.TITLE })];
+  const children: unknown[] = [];
+
+  const logo = await loadImage(resolveDocImage(spec.logo, assets) ?? "", 180);
+  if (logo) {
+    children.push(
+      new Paragraph({
+        children: [
+          new ImageRun({
+            type: logo.ext === "png" ? "png" : "jpg",
+            data: logo.bytes,
+            transformation: { width: logo.width, height: logo.height },
+            altText: { title: spec.title, description: spec.title, name: spec.title },
+          }),
+        ],
+      }),
+    );
+  }
+
+  children.push(new Paragraph({ text: spec.title, heading: HeadingLevel.TITLE }));
   if (spec.subtitle) {
     children.push(
       new Paragraph({ children: [new TextRun({ text: spec.subtitle, italics: true })] }),
@@ -115,6 +219,35 @@ async function buildDocx(spec: DocSpec): Promise<Blob> {
     for (const text of section.bullets ?? []) {
       children.push(new Paragraph({ text, bullet: { level: 0 } }));
     }
+
+    const picture = await loadImage(resolveDocImage(section.image, assets) ?? "");
+    if (picture) {
+      children.push(
+        new Paragraph({
+          children: [
+            new ImageRun({
+              type: picture.ext === "png" ? "png" : "jpg",
+              data: picture.bytes,
+              transformation: { width: picture.width, height: picture.height },
+              altText: {
+                title: section.imageCaption ?? section.heading ?? "Image",
+                description: section.imageCaption ?? section.heading ?? "Image",
+                name: section.imageCaption ?? section.heading ?? "Image",
+              },
+            }),
+          ],
+        }),
+      );
+      if (section.imageCaption) {
+        children.push(
+          new Paragraph({
+            alignment: AlignmentType.LEFT,
+            children: [new TextRun({ text: section.imageCaption, italics: true, size: 18 })],
+          }),
+        );
+      }
+    }
+
     if (section.table) {
       const { headers, rows } = section.table;
       children.push(
@@ -145,7 +278,7 @@ async function buildDocx(spec: DocSpec): Promise<Blob> {
   return Packer.toBlob(doc);
 }
 
-async function buildPdf(spec: DocSpec): Promise<Blob> {
+async function buildPdf(spec: DocSpec, assets: DocAsset[]): Promise<Blob> {
   const { jsPDF } = await import("jspdf");
   const autoTable = (await import("jspdf-autotable")).default;
 
@@ -171,6 +304,20 @@ async function buildPdf(spec: DocSpec): Promise<Blob> {
     }
   };
 
+  const place = async (source: string | null, maxWidth: number) => {
+    const image = await loadImage(source ?? "", maxWidth);
+    if (!image) return;
+    // jsPDF cannot decode every PNG variant, so re-encode through a canvas.
+    const jpeg = await toJpeg(image.dataUrl);
+    if (!jpeg) return;
+    const w = Math.min(maxWidth, width);
+    const h = (image.height / Math.max(1, image.width)) * w;
+    nextPage(h + 12);
+    pdf.addImage(jpeg, "JPEG", margin, y, w, h);
+    y += h + 12;
+  };
+
+  await place(resolveDocImage(spec.logo, assets), 140);
   write(spec.title, 22, "bold");
   if (spec.subtitle) write(spec.subtitle, 12, "italic");
   y += 8;
@@ -185,6 +332,10 @@ async function buildPdf(spec: DocSpec): Promise<Blob> {
       y += 4;
     }
     for (const text of section.bullets ?? []) write(`•  ${text}`, 11, "normal");
+
+    await place(resolveDocImage(section.image, assets), 360);
+    if (section.image && section.imageCaption) write(section.imageCaption, 9, "italic");
+
     if (section.table) {
       nextPage(80);
       autoTable(pdf, {
@@ -204,7 +355,7 @@ async function buildPdf(spec: DocSpec): Promise<Blob> {
   return pdf.output("blob");
 }
 
-async function buildXlsx(spec: DocSpec): Promise<Blob> {
+async function buildXlsx(spec: DocSpec, assets: DocAsset[]): Promise<Blob> {
   const mod = (await import("exceljs")) as unknown as {
     default?: { Workbook: new () => never };
     Workbook?: new () => never;
@@ -213,10 +364,24 @@ async function buildXlsx(spec: DocSpec): Promise<Blob> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const workbook: any = new ExcelJS.Workbook();
 
+  const addImage = async (sheet: unknown, source: string | null, row: number) => {
+    const image = await loadImage(source ?? "", 260);
+    if (!image) return;
+    const id = workbook.addImage({
+      base64: image.dataUrl,
+      extension: image.ext === "png" ? "png" : "jpeg",
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (sheet as any).addImage(id, {
+      tl: { col: 0, row },
+      ext: { width: image.width, height: image.height },
+    });
+  };
+
   const tables = spec.sections.filter((section) => section.table);
 
   if (tables.length > 0) {
-    tables.forEach((section, index) => {
+    for (const [index, section] of tables.entries()) {
       const sheet = workbook.addWorksheet((section.heading ?? `Sheet ${index + 1}`).slice(0, 28));
       const table = section.table!;
       const header = sheet.addRow(table.headers);
@@ -226,7 +391,10 @@ async function buildXlsx(spec: DocSpec): Promise<Blob> {
       sheet.columns.forEach((column: { width?: number }) => {
         column.width = 24;
       });
-    });
+      await addImage(sheet, resolveDocImage(section.image, assets), table.rows.length + 3);
+    }
+    const first = workbook.worksheets[0];
+    if (first) await addImage(first, resolveDocImage(spec.logo, assets), 0);
   } else {
     const sheet = workbook.addWorksheet("Document");
     sheet.addRow([spec.title]).font = { bold: true, size: 14 };
@@ -240,6 +408,7 @@ async function buildXlsx(spec: DocSpec): Promise<Blob> {
     sheet.columns.forEach((column: { width?: number }) => {
       column.width = 60;
     });
+    await addImage(sheet, resolveDocImage(spec.logo, assets), sheet.rowCount + 2);
   }
 
   const buffer = await workbook.xlsx.writeBuffer();
@@ -248,7 +417,7 @@ async function buildXlsx(spec: DocSpec): Promise<Blob> {
   });
 }
 
-async function buildPptx(spec: DocSpec): Promise<Blob> {
+async function buildPptx(spec: DocSpec, assets: DocAsset[]): Promise<Blob> {
   const PptxGenJS = (await import("pptxgenjs")).default;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pptx: any = new (PptxGenJS as unknown as new () => never)();
@@ -256,6 +425,11 @@ async function buildPptx(spec: DocSpec): Promise<Blob> {
 
   const cover = pptx.addSlide();
   cover.background = { color: "111827" };
+  const logo = await loadImage(resolveDocImage(spec.logo, assets) ?? "", 200);
+  if (logo) {
+    const w = 1.6;
+    cover.addImage({ data: logo.dataUrl, x: 0.6, y: 0.5, w, h: (logo.height / logo.width) * w });
+  }
   cover.addText(spec.title, {
     x: 0.6,
     y: 2.0,
@@ -279,38 +453,50 @@ async function buildPptx(spec: DocSpec): Promise<Blob> {
       color: "111827",
     });
 
+    const picture = await loadImage(resolveDocImage(section.image, assets) ?? "", 480);
+    const textWidth = picture ? 4.9 : 8.8;
+
     const body = [
       ...(section.paragraphs ?? []).map((text) => ({ text, options: { bullet: false } })),
       ...(section.bullets ?? []).map((text) => ({ text, options: { bullet: true } })),
     ];
     if (body.length > 0) {
-      slide.addText(body, { x: 0.6, y: 1.5, w: 8.8, h: 3.6, fontSize: 16, color: "374151" });
+      slide.addText(body, { x: 0.6, y: 1.5, w: textWidth, h: 3.6, fontSize: 16, color: "374151" });
+    }
+    if (picture) {
+      const w = 3.6;
+      slide.addImage({
+        data: picture.dataUrl,
+        x: 5.7,
+        y: 1.5,
+        w,
+        h: Math.min(3.6, (picture.height / picture.width) * w),
+      });
     }
     if (section.table) {
       slide.addTable([section.table.headers, ...section.table.rows], {
         x: 0.6,
         y: body.length > 0 ? 3.4 : 1.5,
-        w: 8.8,
+        w: textWidth,
         fontSize: 12,
         border: { pt: 1, color: "E5E7EB" },
       });
     }
   }
 
-  const blob = (await pptx.write({ outputType: "blob" })) as Blob;
-  return blob;
+  return (await pptx.write({ outputType: "blob" })) as Blob;
 }
 
 /** Builds the real office file in the browser and downloads it. */
-export async function downloadDoc(spec: DocSpec, format: DocFormat) {
+export async function downloadDoc(spec: DocSpec, format: DocFormat, assets: DocAsset[] = []) {
   const blob =
     format === "docx"
-      ? await buildDocx(spec)
+      ? await buildDocx(spec, assets)
       : format === "pdf"
-        ? await buildPdf(spec)
+        ? await buildPdf(spec, assets)
         : format === "xlsx"
-          ? await buildXlsx(spec)
-          : await buildPptx(spec);
+          ? await buildXlsx(spec, assets)
+          : await buildPptx(spec, assets);
 
   download(blob, `${spec.name}.${format}`);
 }
