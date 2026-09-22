@@ -153,11 +153,30 @@ export function useBuilder() {
       const current = projectsRef.current.find((p) => p.id === activeIdRef.current);
       const baseFiles: ProjectFile[] = current?.files ?? [];
       const history: ChatMessage[] = [...(current?.messages ?? []), userMessage];
+
+      // An attached image is either a design reference or real content to place
+      // inside the site (a logo, a photo). When it is content, it becomes an
+      // asset with a token the model can position exactly where the user asked.
+      const existingAssets: Asset[] = current?.assets ?? [];
+      const placeImage =
+        requestMode === "build" &&
+        Boolean(options?.image) &&
+        detectAssetIntent(text, { hasFiles: baseFiles.length > 0 });
+      const newAsset: Asset | null = placeImage
+        ? {
+            token: `__ASSET_${existingAssets.length + 1}__`,
+            name: options?.imageName ?? `upload-${existingAssets.length + 1}`,
+            url: options!.image!,
+          }
+        : null;
+      const assets: Asset[] = newAsset ? [...existingAssets, newAsset] : existingAssets;
+
       patchActive((project) => {
         return {
           ...project,
           name:
             project.messages.length === 0 && text.trim() ? text.trim().slice(0, 48) : project.name,
+          ...(newAsset ? { assets } : {}),
           messages: [
             ...project.messages,
             userMessage,
