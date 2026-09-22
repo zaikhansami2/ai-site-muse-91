@@ -233,7 +233,8 @@ export function useBuilder() {
           }
 
           const snapshot = acc;
-          const parsed = requestMode === "build" ? parseFiles(snapshot) : null;
+          const parsed =
+            requestMode === "build" ? applyAssets(parseFiles(snapshot), assets) : null;
           patchActive((project) => ({
             ...project,
             messages: project.messages.map((m) =>
@@ -249,7 +250,7 @@ export function useBuilder() {
         // Tidy the generated code with Prettier before it lands in the editor.
         if (requestMode === "build") {
           setStatus("formatting");
-          const finalFiles = parseFiles(acc);
+          const finalFiles = applyAssets(parseFiles(acc), assets);
           if (finalFiles.length > 0) {
             const { formatAll } = await import("@/lib/format");
             const pretty = await formatAll(mergeFiles(baseFiles, finalFiles as ProjectFile[]));
