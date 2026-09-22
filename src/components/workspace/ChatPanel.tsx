@@ -21,7 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Status, UiMode } from "@/hooks/use-builder";
-import { parseClarify, stripFiles } from "@/lib/files";
+import { parseClarify, parseFiles, stripFiles } from "@/lib/files";
 import type { Mode } from "@/lib/prompts";
 import type { ChatMessage, Project } from "@/lib/storage";
 import { cn } from "@/lib/utils";
@@ -29,6 +29,7 @@ import {
   Bot,
   Check,
   ChevronDown,
+  FileCode2,
   Globe2,
   Hammer,
   HelpCircle,
@@ -130,6 +131,8 @@ export function ChatPanel({
   // we show a choice card instead of plain text.
   const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
   const clarify = !busy && lastAssistant ? parseClarify(lastAssistant.content) : null;
+  // Live "what am I writing right now" feed while the build streams in.
+  const streamingFiles = busy && lastAssistant ? parseFiles(lastAssistant.content) : [];
 
   return (
     <div className="relative flex h-full min-h-0 overflow-hidden">
