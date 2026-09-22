@@ -196,7 +196,12 @@ export function useBuilder() {
           body: JSON.stringify({
             mode: requestMode,
             research: research || detectResearch(text),
-            ...(requestMode === "build" && baseFiles.length > 0 ? { files: baseFiles } : {}),
+            ...(requestMode === "build" && baseFiles.length > 0
+              ? { files: maskAssets(baseFiles, assets) }
+              : {}),
+            ...(assets.length > 0
+              ? { assets: assets.map(({ token, name }) => ({ token, name })) }
+              : {}),
             messages: history.map((m) => ({
               role: m.role,
               // Past build replies are stored with full code; send the summary only
