@@ -110,26 +110,27 @@ export function FilesPane({
                     ))}
                   </div>
                 )}
-              <div className="mt-3 flex flex-wrap gap-2">
-                {spec.formats.map((format) => {
-                  const Icon = FORMAT_ICON[format];
-                  const loading = busy === `${spec.id}:${format}`;
-                  return (
-                    <Button
-                      key={format}
-                      size="sm"
-                      variant="outline"
-                      disabled={loading}
-                      onClick={() => void handleDownload(spec, format)}
-                    >
-                      {loading ? <Loader2 className="animate-spin" /> : <Icon />}
-                      {DOC_LABEL[format]} .{format}
-                    </Button>
-                  );
-                })}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {spec.formats.map((format) => {
+                    const Icon = FORMAT_ICON[format];
+                    const loading = busy === `${spec.id}:${format}`;
+                    return (
+                      <Button
+                        key={format}
+                        size="sm"
+                        variant="outline"
+                        disabled={loading}
+                        onClick={() => void handleDownload(spec, format)}
+                      >
+                        {loading ? <Loader2 className="animate-spin" /> : <Icon />}
+                        {DOC_LABEL[format]} .{format}
+                      </Button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
