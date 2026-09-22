@@ -21,13 +21,21 @@ const FORMAT_ICON: Record<DocFormat, typeof FileText> = {
   pptx: Presentation,
 };
 
-export function FilesPane({ docs, files }: { docs: DocSpec[]; files: ProjectFile[] }) {
+export function FilesPane({
+  docs,
+  files,
+  assets = [],
+}: {
+  docs: DocSpec[];
+  files: ProjectFile[];
+  assets?: DocAsset[];
+}) {
   const [busy, setBusy] = useState<string | null>(null);
 
   const handleDownload = async (spec: DocSpec, format: DocFormat) => {
     setBusy(`${spec.id}:${format}`);
     try {
-      await downloadDoc(spec, format);
+      await downloadDoc(spec, format, assets);
       toast.success(`${spec.name}.${format} downloaded`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not create the file.");
