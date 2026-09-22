@@ -130,7 +130,7 @@ export function useBuilder() {
   };
 
   const send = useCallback(
-    async (text: string, options?: { image?: string; mode?: Mode }) => {
+    async (text: string, options?: { image?: string; imageName?: string; mode?: Mode }) => {
       const requestMode: Mode =
         options?.mode ??
         (mode === "auto"
