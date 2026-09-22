@@ -100,11 +100,11 @@ async function buildDocx(spec: DocSpec): Promise<Blob> {
     WidthType,
   } = await import("docx");
 
-  const children: unknown[] = [
-    new Paragraph({ text: spec.title, heading: HeadingLevel.TITLE }),
-  ];
+  const children: unknown[] = [new Paragraph({ text: spec.title, heading: HeadingLevel.TITLE })];
   if (spec.subtitle) {
-    children.push(new Paragraph({ children: [new TextRun({ text: spec.subtitle, italics: true })] }));
+    children.push(
+      new Paragraph({ children: [new TextRun({ text: spec.subtitle, italics: true })] }),
+    );
   }
 
   for (const section of spec.sections) {
@@ -195,7 +195,9 @@ async function buildPdf(spec: DocSpec): Promise<Blob> {
         styles: { fontSize: 10, cellPadding: 6 },
         headStyles: { fillColor: [24, 24, 27] },
       });
-      y = ((pdf as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? y) + 14;
+      y =
+        ((pdf as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? y) +
+        14;
     }
   }
 
@@ -315,5 +317,8 @@ export async function downloadDoc(spec: DocSpec, format: DocFormat) {
 
 /** Downloads one of the generated website files. */
 export function downloadFile(path: string, content: string) {
-  download(new Blob([content], { type: "text/plain;charset=utf-8" }), path.split("/").pop() ?? path);
+  download(
+    new Blob([content], { type: "text/plain;charset=utf-8" }),
+    path.split("/").pop() ?? path,
+  );
 }

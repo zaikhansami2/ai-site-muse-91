@@ -103,7 +103,12 @@ export function FilesPane({ docs, files }: { docs: DocSpec[]; files: ProjectFile
             <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
               Website files
             </h3>
-            <Button size="sm" variant="ghost" disabled={busy === "zip"} onClick={() => void downloadZip()}>
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={busy === "zip"}
+              onClick={() => void downloadZip()}
+            >
               {busy === "zip" ? <Loader2 className="animate-spin" /> : <Package />}
               Download ZIP
             </Button>
