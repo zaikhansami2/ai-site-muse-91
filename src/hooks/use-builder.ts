@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { parseFiles, type ProjectFile } from "@/lib/files";
-import { detectMode } from "@/lib/intent";
+import { parseFiles, stripFiles, type ProjectFile } from "@/lib/files";
+import { detectMode, detectResearch } from "@/lib/intent";
 import type { Mode } from "@/lib/prompts";
 import {
   loadProjects,
@@ -111,6 +111,17 @@ export function useBuilder() {
     projectsRef.current = projects;
   }, [active, projects]);
 
+  const mergeFiles = (current: ProjectFile[], incoming: ProjectFile[]): ProjectFile[] => {
+    if (incoming.length === 0) return current;
+    const next = [...current];
+    for (const file of incoming) {
+      const index = next.findIndex((item) => item.path === file.path);
+      if (index >= 0) next[index] = file;
+      else next.push(file);
+    }
+    return next;
+  };
+
   const send = useCallback(
     async (text: string, options?: { image?: string; mode?: Mode }) => {
       const requestMode: Mode =
@@ -133,6 +144,7 @@ export function useBuilder() {
       const assistantId = crypto.randomUUID();
 
       const current = projectsRef.current.find((p) => p.id === activeIdRef.current);
+      const baseFiles: ProjectFile[] = current?.files ?? [];
       const history: ChatMessage[] = [...(current?.messages ?? []), userMessage];
       patchActive((project) => {
         return {
@@ -157,10 +169,13 @@ export function useBuilder() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             mode: requestMode,
-            research,
+            research: research || detectResearch(text),
+            ...(requestMode === "build" && baseFiles.length > 0 ? { files: baseFiles } : {}),
             messages: history.map((m) => ({
               role: m.role,
-              content: m.content,
+              // Past build replies are stored with full code; send the summary only
+              // so the model keeps the conversation in memory without huge payloads.
+              content: m.role === "assistant" ? stripFiles(m.content) : m.content,
               ...(m.image ? { image: m.image } : {}),
             })),
           }),
@@ -193,7 +208,10 @@ export function useBuilder() {
             messages: project.messages.map((m) =>
               m.id === assistantId ? { ...m, content: snapshot } : m,
             ),
-            files: parsed && parsed.length > 0 ? (parsed as ProjectFile[]) : project.files,
+            files:
+              parsed && parsed.length > 0
+                ? mergeFiles(baseFiles, parsed as ProjectFile[])
+                : project.files,
           }));
         }
 
@@ -203,7 +221,7 @@ export function useBuilder() {
           const finalFiles = parseFiles(acc);
           if (finalFiles.length > 0) {
             const { formatAll } = await import("@/lib/format");
-            const pretty = await formatAll(finalFiles as ProjectFile[]);
+            const pretty = await formatAll(mergeFiles(baseFiles, finalFiles as ProjectFile[]));
             patchActive((project) => ({ ...project, files: pretty }));
           }
         }
