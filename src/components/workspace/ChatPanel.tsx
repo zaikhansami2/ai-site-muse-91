@@ -284,7 +284,10 @@ export function ChatPanel({
                 </div>
               </div>
             ) : (
-              messages.map((message) => (
+              messages.map((message) => {
+                const isLive = busy && message.id === lastAssistant?.id;
+                const liveFiles = isLive ? streamingFiles : [];
+                return (
                 <Message key={message.id} from={message.role}>
                   <MessageContent
                     className={cn(message.role === "user" && "bg-primary text-primary-foreground")}
