@@ -100,7 +100,7 @@ async function buildDocx(spec: DocSpec): Promise<Blob> {
     WidthType,
   } = await import("docx");
 
-  const children: InstanceType<typeof Paragraph>[] | unknown[] = [
+  const children: unknown[] = [
     new Paragraph({ text: spec.title, heading: HeadingLevel.TITLE }),
   ];
   if (spec.subtitle) {
