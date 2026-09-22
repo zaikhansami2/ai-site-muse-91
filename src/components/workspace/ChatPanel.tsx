@@ -258,7 +258,7 @@ export function ChatPanel({
         </header>
 
         <Conversation className="min-h-0">
-          <ConversationContent className="mx-auto w-full max-w-3xl px-5 pb-36 pt-10">
+          <ConversationContent className="mx-auto w-full max-w-3xl px-5 pb-6 pt-10">
             {messages.length === 0 ? (
               <div className="flex min-h-[55vh] flex-col items-center justify-center text-center">
                 <div className="mb-5 flex size-12 items-center justify-center rounded-lg border border-border bg-background/80 shadow-sm">
@@ -388,7 +388,7 @@ export function ChatPanel({
           <ConversationScrollButton />
         </Conversation>
 
-        <div className="absolute inset-x-0 bottom-0 z-20 bg-background/72 px-4 pb-4 pt-3 backdrop-blur-xl">
+        <div className="relative z-20 shrink-0 border-t border-border/60 bg-background/72 px-4 pb-4 pt-3 backdrop-blur-xl">
           <PromptInput
             accept="image/*"
             maxFiles={1}
