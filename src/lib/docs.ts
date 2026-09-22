@@ -147,6 +147,30 @@ async function loadImage(source: string, maxWidth = 520): Promise<LoadedImage | 
   }
 }
 
+/** Re-encodes any image as a JPEG data URL (PDF writer is picky about PNGs). */
+async function toJpeg(dataUrl: string): Promise<string | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const context = canvas.getContext("2d");
+        if (!context) return resolve(null);
+        context.fillStyle = "#ffffff";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL("image/jpeg", 0.92));
+      } catch {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = dataUrl;
+  });
+}
+
 async function buildDocx(spec: DocSpec, assets: DocAsset[]): Promise<Blob> {
   const {
     Document,
