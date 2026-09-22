@@ -77,6 +77,25 @@ export function detectMode(
   return "chat";
 }
 
+const ASSET_PATTERNS = [
+  /\b(logo|icon|favicon|photo|picture|image|banner|headshot|product shot|screenshot of my|my picture|this image|this photo|this logo)\b/i,
+  /\b(use|add|put|place|insert|set|show|display|upload)\b.*\b(this|it|image|photo|logo|picture)\b/i,
+  /\b(laga|lagao|laga do|lagado|dal|dalo|daal do|istemal|isteal|use kro|use karo|add kro|add karo|set kro)\b/i,
+];
+
+/**
+ * Decides whether an attached image should be placed INSIDE the generated site
+ * (logo, photo) rather than used as a design reference to recreate.
+ */
+export function detectAssetIntent(text: string, context?: { hasFiles?: boolean }): boolean {
+  const value = text.trim();
+  if (/\b(recreate|clone|copy this design|like this design|reference|jaisa banao|aisa banao)\b/i.test(value))
+    return false;
+  if (matches(ASSET_PATTERNS, value)) return true;
+  // An image dropped onto an existing site is almost always content to place.
+  return Boolean(context?.hasFiles);
+}
+
 export const MODE_LABEL: Record<Mode, string> = {
   chat: "Chat",
   plan: "Plan",
