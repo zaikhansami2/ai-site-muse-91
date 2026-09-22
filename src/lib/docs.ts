@@ -283,10 +283,13 @@ async function buildPdf(spec: DocSpec, assets: DocAsset[]): Promise<Blob> {
   const place = async (source: string | null, maxWidth: number) => {
     const image = await loadImage(source ?? "", maxWidth);
     if (!image) return;
+    // jsPDF cannot decode every PNG variant, so re-encode through a canvas.
+    const jpeg = await toJpeg(image.dataUrl);
+    if (!jpeg) return;
     const w = Math.min(maxWidth, width);
     const h = (image.height / Math.max(1, image.width)) * w;
     nextPage(h + 12);
-    pdf.addImage(image.dataUrl, image.ext === "png" ? "PNG" : "JPEG", margin, y, w, h);
+    pdf.addImage(jpeg, "JPEG", margin, y, w, h);
     y += h + 12;
   };
 
