@@ -320,7 +320,8 @@ async function buildPdf(spec: DocSpec, assets: DocAsset[]): Promise<Blob> {
         headStyles: { fillColor: [24, 24, 27] },
       });
       y =
-        ((pdf as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? y) + 14;
+        ((pdf as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? y) +
+        14;
     }
   }
 
@@ -339,7 +340,10 @@ async function buildXlsx(spec: DocSpec, assets: DocAsset[]): Promise<Blob> {
   const addImage = async (sheet: unknown, source: string | null, row: number) => {
     const image = await loadImage(source ?? "", 260);
     if (!image) return;
-    const id = workbook.addImage({ base64: image.dataUrl, extension: image.ext === "png" ? "png" : "jpeg" });
+    const id = workbook.addImage({
+      base64: image.dataUrl,
+      extension: image.ext === "png" ? "png" : "jpeg",
+    });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (sheet as any).addImage(id, {
       tl: { col: 0, row },
@@ -472,5 +476,8 @@ export async function downloadDoc(spec: DocSpec, format: DocFormat, assets: DocA
 
 /** Downloads one of the generated website files. */
 export function downloadFile(path: string, content: string) {
-  download(new Blob([content], { type: "text/plain;charset=utf-8" }), path.split("/").pop() ?? path);
+  download(
+    new Blob([content], { type: "text/plain;charset=utf-8" }),
+    path.split("/").pop() ?? path,
+  );
 }

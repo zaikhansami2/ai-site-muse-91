@@ -197,7 +197,11 @@ function Workspace() {
                     )}
                     {tab === "files" && (
                       <Suspense fallback={<PaneFallback />}>
-                        <FilesPane docs={docs} files={files} />
+                        <FilesPane
+                          docs={docs}
+                          files={files}
+                          assets={builder.active?.assets ?? []}
+                        />
                       </Suspense>
                     )}
                   </div>
