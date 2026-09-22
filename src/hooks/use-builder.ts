@@ -147,7 +147,11 @@ export function useBuilder() {
       const requestMode: Mode =
         options?.mode ??
         (mode === "auto"
-          ? detectMode(text, { hasImage: Boolean(options?.image), hasFiles: hasFilesRef.current })
+          ? detectMode(text, {
+              hasImage: Boolean(options?.image),
+              hasFiles: hasFilesRef.current,
+              hasDocs: hasDocsRef.current,
+            })
           : mode);
       if (!text.trim() && !options?.image) return;
       setError(null);
@@ -174,7 +178,9 @@ export function useBuilder() {
       const placeImage =
         requestMode === "build" &&
         Boolean(options?.image) &&
-        detectAssetIntent(text, { hasFiles: baseFiles.length > 0 });
+        detectAssetIntent(text, {
+          hasFiles: baseFiles.length > 0 || (current?.docs?.length ?? 0) > 0,
+        });
       const newAsset: Asset | null = placeImage
         ? {
             token: `__ASSET_${existingAssets.length + 1}__`,
@@ -211,6 +217,9 @@ export function useBuilder() {
             research: research || detectResearch(text),
             ...(requestMode === "build" && baseFiles.length > 0
               ? { files: maskAssets(baseFiles, assets) }
+              : {}),
+            ...(requestMode === "build" && (current?.docs?.length ?? 0) > 0
+              ? { docs: (current?.docs ?? []).map((doc) => ({ id: doc.id, spec: specOf(doc) })) }
               : {}),
             ...(assets.length > 0
               ? { assets: assets.map(({ token, name }) => ({ token, name })) }
