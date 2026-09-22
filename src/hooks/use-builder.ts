@@ -121,6 +121,21 @@ export function useBuilder() {
     projectsRef.current = projects;
   }, [active, projects]);
 
+  /** Compact JSON of a document, sent back so the model edits it in place. */
+  const specOf = (doc: DocSpec) =>
+    JSON.stringify(
+      {
+        name: doc.name,
+        title: doc.title,
+        ...(doc.subtitle ? { subtitle: doc.subtitle } : {}),
+        ...(doc.logo ? { logo: doc.logo } : {}),
+        formats: doc.formats,
+        sections: doc.sections,
+      },
+      null,
+      2,
+    );
+
   const mergeDocs = (current: DocSpec[], incoming: DocSpec[]): DocSpec[] => {
     const next = [...current];
     for (const doc of incoming) {
