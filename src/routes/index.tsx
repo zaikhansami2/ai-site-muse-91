@@ -104,9 +104,9 @@ function Workspace() {
       status={builder.status}
       error={builder.error}
       busy={busy}
-      onSend={(text, image) => {
+      onSend={(text, image, imageName) => {
         setTab("preview");
-        void builder.send(text, image ? { image } : undefined);
+        void builder.send(text, image ? { image, ...(imageName ? { imageName } : {}) } : undefined);
       }}
       onStop={builder.stop}
       onSelect={builder.setActiveId}
