@@ -284,26 +284,70 @@ export function ChatPanel({
                 </div>
               </div>
             ) : (
-              messages.map((message) => (
-                <Message key={message.id} from={message.role}>
-                  <MessageContent
-                    className={cn(message.role === "user" && "bg-primary text-primary-foreground")}
-                  >
-                    {message.image && (
-                      <img
-                        src={message.image}
-                        alt="Attached reference"
-                        className="max-h-72 rounded-md object-contain"
-                      />
-                    )}
-                    {message.role === "assistant" ? (
-                      <MessageResponse>{stripFiles(message.content)}</MessageResponse>
-                    ) : (
-                      <p className="whitespace-pre-wrap">{message.content}</p>
-                    )}
-                  </MessageContent>
-                </Message>
-              ))
+              messages.map((message) => {
+                const isLive = busy && message.id === lastAssistant?.id;
+                const liveFiles = isLive ? streamingFiles : [];
+                return (
+                  <Message key={message.id} from={message.role}>
+                    <MessageContent
+                      className={cn(
+                        message.role === "user" && "bg-primary text-primary-foreground",
+                      )}
+                    >
+                      {message.image && (
+                        <img
+                          src={message.image}
+                          alt="Attached reference"
+                          className="max-h-72 rounded-md object-contain"
+                        />
+                      )}
+                      {message.role === "assistant" ? (
+                        <>
+                          <MessageResponse>{stripFiles(message.content)}</MessageResponse>
+                          {isLive && (
+                            <div className="mt-2 rounded-lg border border-border bg-background/85 p-3 text-sm shadow-sm">
+                              <Shimmer>
+                                {status === "analyzing"
+                                  ? "Thinking about your request…"
+                                  : status === "formatting"
+                                    ? "Tidying up the code…"
+                                    : liveFiles.length > 0
+                                      ? `Writing ${liveFiles[liveFiles.length - 1]!.path}…`
+                                      : "Creating…"}
+                              </Shimmer>
+                              {liveFiles.length > 0 && (
+                                <ul className="mt-2 space-y-1">
+                                  {liveFiles.map((file, index) => {
+                                    const done = index < liveFiles.length - 1;
+                                    return (
+                                      <li
+                                        key={file.path}
+                                        className="flex items-center gap-2 text-xs text-muted-foreground"
+                                      >
+                                        {done ? (
+                                          <Check className="size-3.5 text-primary" />
+                                        ) : (
+                                          <FileCode2 className="size-3.5 animate-pulse text-primary" />
+                                        )}
+                                        <span className="font-mono">{file.path}</span>
+                                        <span className="ml-auto">
+                                          {file.content.split("\n").length} lines
+                                        </span>
+                                      </li>
+                                    );
+                                  })}
+                                </ul>
+                              )}
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <p className="whitespace-pre-wrap">{message.content}</p>
+                      )}
+                    </MessageContent>
+                  </Message>
+                );
+              })
             )}
             {clarify && (
               <div className="mt-2 rounded-lg border border-border bg-background/90 p-4 shadow-sm">
@@ -328,38 +372,11 @@ export function ChatPanel({
                 </p>
               </div>
             )}
-            {busy && (
-              <div className="mt-2 rounded-lg border border-border bg-background/85 p-3 text-sm shadow-sm">
+            {busy && !lastAssistant && (
+              <div className="mt-2 text-sm">
                 <Shimmer>
-                  {status === "analyzing"
-                    ? "Thinking about your request…"
-                    : status === "formatting"
-                      ? "Tidying up the code…"
-                      : streamingFiles.length > 0
-                        ? `Writing ${streamingFiles[streamingFiles.length - 1]!.path}…`
-                        : "Creating…"}
+                  {status === "analyzing" ? "Thinking about your request…" : "Creating…"}
                 </Shimmer>
-                {streamingFiles.length > 0 && (
-                  <ul className="mt-2 space-y-1">
-                    {streamingFiles.map((file, index) => {
-                      const done = index < streamingFiles.length - 1;
-                      return (
-                        <li
-                          key={file.path}
-                          className="flex items-center gap-2 text-xs text-muted-foreground"
-                        >
-                          {done ? (
-                            <Check className="size-3.5 text-primary" />
-                          ) : (
-                            <FileCode2 className="size-3.5 animate-pulse text-primary" />
-                          )}
-                          <span className="font-mono">{file.path}</span>
-                          <span className="ml-auto">{file.content.split("\n").length} lines</span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
               </div>
             )}
             {error && (
