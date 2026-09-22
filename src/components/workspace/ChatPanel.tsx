@@ -126,6 +126,11 @@ export function ChatPanel({
 
   const chatStatus = status === "error" ? "error" : busy ? "streaming" : "ready";
 
+  // The assistant decides for itself when a question is needed; when it asks,
+  // we show a choice card instead of plain text.
+  const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
+  const clarify = !busy && lastAssistant ? parseClarify(lastAssistant.content) : null;
+
   return (
     <div className="relative flex h-full min-h-0 overflow-hidden">
       <aside
