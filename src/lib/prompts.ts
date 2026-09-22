@@ -43,18 +43,29 @@ Never invent CDN URLs outside this list, and never use a library that requires a
  * PDF deliverable, the generated page builds and downloads the real file in
  * the browser using these free libraries.
  */
-export const DOCUMENT_KIT = `Document generation (Word, Excel, PowerPoint, PDF) — all free, browser-side, no key:
-- Word .docx — https://cdn.jsdelivr.net/npm/docx@8/build/index.umd.js  (docx.Document / Packer.toBlob)
-- PowerPoint .pptx — https://cdn.jsdelivr.net/npm/pptxgenjs@3/dist/pptxgen.bundle.js  (new PptxGenJS())
-- Excel .xlsx — https://cdn.jsdelivr.net/npm/exceljs@4/dist/exceljs.min.js  (new ExcelJS.Workbook())
-- PDF — https://cdn.jsdelivr.net/npm/jspdf@2/dist/jspdf.umd.min.js (+ jspdf-autotable for tables)
-- File download — https://cdn.jsdelivr.net/npm/file-saver@2/dist/FileSaver.min.js  (saveAs(blob, name))
-- Live spreadsheet/doc/slide editor in the page — Univer https://unpkg.com/@univerjs/umd/lib/univer.full.umd.js + univer.css
+export const DOCUMENT_KIT = `Office documents (Word, Excel, PowerPoint, PDF).
 
-When the request is for a document (company profile, proposal, invoice, report, quotation, CV, deck, price list):
-- Still deliver index.html, but design it as a document builder page: a clean branded preview of the document plus a download button per format the user asked for.
-- Fill the document with real, specific content for that business — never lorem, never blank templates.
-- Wire the download button to actually generate the file client-side with the library above, so clicking it downloads a working .docx/.pptx/.xlsx/.pdf.`;
+When the user asks for a document — company profile, proposal, invoice, quotation, report, CV/resume, brochure, price list, letter, deck, spreadsheet — do NOT write download code. Instead emit ONE structured block and the app turns it into a real downloadable file:
+
+<doc>
+{
+  "name": "ahad-engineering-company-profile",
+  "title": "Ahad Engineering Services",
+  "subtitle": "Company Profile 2026",
+  "formats": ["docx", "pdf"],
+  "sections": [
+    { "heading": "About Us", "paragraphs": ["..."], "bullets": ["..."] },
+    { "heading": "Services & Rates", "table": { "headers": ["Service", "Rate"], "rows": [["...", "..."]] } }
+  ]
+}
+</doc>
+
+Document rules:
+- "formats" holds only what the user needs: docx (Word), pdf, xlsx (Excel), pptx (PowerPoint). Pick sensibly — a spreadsheet/price list is xlsx, a presentation is pptx, a letter or profile is docx + pdf.
+- Write real, specific, complete content for that exact business. Never lorem, never blank templates, never "[insert here]".
+- Use tables for any pricing, schedule, comparison or data.
+- Keep the JSON valid: no comments, no trailing commas, no markdown inside strings.
+- A document request needs NO website files: emit the <doc> block alone (plus one short sentence). Only add <file> blocks if the user also asked for a web page.`;
 
 /**
  * Self-directed clarification. The model decides on its own whether one

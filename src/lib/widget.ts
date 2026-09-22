@@ -193,7 +193,13 @@ export function removeWidget(files: ProjectFile[]): ProjectFile[] {
     .filter((file) => file.path !== WIDGET_PATH)
     .map((file) =>
       file.path.endsWith(".html")
-        ? { ...file, content: file.content.replace(new RegExp(`\\s*<script src="\\./${WIDGET_PATH}"[^>]*></script>`, "g"), "") }
+        ? {
+            ...file,
+            content: file.content.replace(
+              new RegExp(`\\s*<script src="\\./${WIDGET_PATH}"[^>]*></script>`, "g"),
+              "",
+            ),
+          }
         : file,
     );
 }

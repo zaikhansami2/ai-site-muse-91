@@ -14,7 +14,9 @@ function decodeEntities(value: string) {
 }
 
 function stripTags(value: string) {
-  return decodeEntities(value.replace(/<[^>]*>/g, "")).replace(/\s+/g, " ").trim();
+  return decodeEntities(value.replace(/<[^>]*>/g, ""))
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function parseDuckDuckGo(html: string, limit: number): SearchResult[] {
@@ -41,7 +43,9 @@ function parseDuckDuckGo(html: string, limit: number): SearchResult[] {
 
 function parseLite(html: string, limit: number): SearchResult[] {
   const results: SearchResult[] = [];
-  const rows = Array.from(html.matchAll(/<a[^>]+class="result-link"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi));
+  const rows = Array.from(
+    html.matchAll(/<a[^>]+class="result-link"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi),
+  );
   const snippets = Array.from(html.matchAll(/class="result-snippet"[^>]*>([\s\S]*?)<\/td>/gi));
   rows.forEach((row, index) => {
     if (results.length >= limit) return;
@@ -62,7 +66,10 @@ function parseLite(html: string, limit: number): SearchResult[] {
 /** Live DuckDuckGo results, scraped from the no-JS endpoints (no API key needed). */
 export async function searchWeb(query: string, limit = 5): Promise<SearchResult[]> {
   const attempts: { url: string; parse: (html: string, limit: number) => SearchResult[] }[] = [
-    { url: `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`, parse: parseDuckDuckGo },
+    {
+      url: `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`,
+      parse: parseDuckDuckGo,
+    },
     { url: `https://lite.duckduckgo.com/lite/?q=${encodeURIComponent(query)}`, parse: parseLite },
   ];
 
@@ -128,13 +135,17 @@ export async function researchContext(query: string) {
   const results = await searchWeb(query, 5);
   if (results.length === 0) return "";
 
-  const pages = await Promise.all(results.slice(0, 2).map((result) => extractPage(result.url, 2500)));
+  const pages = await Promise.all(
+    results.slice(0, 2).map((result) => extractPage(result.url, 2500)),
+  );
 
   const lines = [
     "LIVE WEB RESEARCH (fetched just now — use it for facts, naming, and design cues):",
     "",
     "Search results:",
-    ...results.map((result, index) => `${index + 1}. ${result.title} — ${result.url}\n   ${result.snippet}`),
+    ...results.map(
+      (result, index) => `${index + 1}. ${result.title} — ${result.url}\n   ${result.snippet}`,
+    ),
   ];
 
   for (const page of pages) {

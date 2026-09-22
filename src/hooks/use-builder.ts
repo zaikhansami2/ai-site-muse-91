@@ -8,6 +8,7 @@ import {
   type Asset,
   type ProjectFile,
 } from "@/lib/files";
+import { parseDocs, type DocSpec } from "@/lib/docs";
 import { detectAssetIntent, detectMode, detectResearch } from "@/lib/intent";
 import type { Mode } from "@/lib/prompts";
 import {
@@ -117,6 +118,16 @@ export function useBuilder() {
     hasFilesRef.current = (active?.files?.length ?? 0) > 0;
     projectsRef.current = projects;
   }, [active, projects]);
+
+  const mergeDocs = (current: DocSpec[], incoming: DocSpec[]): DocSpec[] => {
+    const next = [...current];
+    for (const doc of incoming) {
+      const index = next.findIndex((item) => item.id === doc.id);
+      if (index >= 0) next[index] = doc;
+      else next.push(doc);
+    }
+    return next;
+  };
 
   const mergeFiles = (current: ProjectFile[], incoming: ProjectFile[]): ProjectFile[] => {
     if (incoming.length === 0) return current;
@@ -234,6 +245,7 @@ export function useBuilder() {
 
           const snapshot = acc;
           const parsed = requestMode === "build" ? applyAssets(parseFiles(snapshot), assets) : null;
+          const docs = requestMode === "build" ? parseDocs(snapshot) : [];
           patchActive((project) => ({
             ...project,
             messages: project.messages.map((m) =>
@@ -243,6 +255,7 @@ export function useBuilder() {
               parsed && parsed.length > 0
                 ? mergeFiles(baseFiles, parsed as ProjectFile[])
                 : project.files,
+            ...(docs.length > 0 ? { docs: mergeDocs(project.docs ?? [], docs) } : {}),
           }));
         }
 

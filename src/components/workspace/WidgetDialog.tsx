@@ -28,7 +28,9 @@ export function WidgetDialog({
 }) {
   const [open, setOpen] = useState(false);
   const [business, setBusiness] = useState(siteName);
-  const [welcome, setWelcome] = useState("Hi! Ask me anything about us — or leave your email and we'll reach out.");
+  const [welcome, setWelcome] = useState(
+    "Hi! Ask me anything about us — or leave your email and we'll reach out.",
+  );
   const [accent, setAccent] = useState("#2fe0c0");
   const [webhook, setWebhook] = useState("");
 

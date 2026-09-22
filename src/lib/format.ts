@@ -7,7 +7,8 @@ function parserFor(path: string): Parser | null {
   if (lang === "html") return "html";
   if (lang === "css") return "css";
   if (lang === "json") return "json";
-  if (lang === "js" || lang === "javascript" || lang === "ts" || lang === "typescript") return "babel";
+  if (lang === "js" || lang === "javascript" || lang === "ts" || lang === "typescript")
+    return "babel";
   return null;
 }
 
@@ -30,7 +31,12 @@ export async function formatCode(path: string, source: string) {
 
   return await format(source, {
     parser,
-    plugins: [html.default ?? html, postcss.default ?? postcss, babel.default ?? babel, estree.default ?? estree],
+    plugins: [
+      html.default ?? html,
+      postcss.default ?? postcss,
+      babel.default ?? babel,
+      estree.default ?? estree,
+    ],
     printWidth: 100,
     tabWidth: 2,
     semi: true,

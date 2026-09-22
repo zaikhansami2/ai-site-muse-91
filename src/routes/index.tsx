@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Code2, Eye, PencilRuler } from "lucide-react";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { Code2, Eye, FolderDown } from "lucide-react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 
 import balloonAsset from "@/assets/balloon-loop-fast.mp4.asset.json";
 import { ChatPanel } from "@/components/workspace/ChatPanel";
@@ -9,15 +9,14 @@ import { TopBar } from "@/components/workspace/TopBar";
 import { Button } from "@/components/ui/button";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { useBuilder } from "@/hooks/use-builder";
-import { SKETCH_PROMPT } from "@/lib/prompts";
 import { cn } from "@/lib/utils";
 
-// Heavy editor/canvas panes load on demand so the workspace opens instantly.
+// Heavy editor/files panes load on demand so the workspace opens instantly.
 const CodePane = lazy(() =>
   import("@/components/workspace/CodePane").then((m) => ({ default: m.CodePane })),
 );
-const SketchCanvas = lazy(() =>
-  import("@/components/workspace/SketchCanvas").then((m) => ({ default: m.SketchCanvas })),
+const FilesPane = lazy(() =>
+  import("@/components/workspace/FilesPane").then((m) => ({ default: m.FilesPane })),
 );
 
 export const Route = createFileRoute("/")({
@@ -43,7 +42,7 @@ export const Route = createFileRoute("/")({
 const TABS = [
   { key: "preview", label: "Preview", icon: Eye },
   { key: "code", label: "Code", icon: Code2 },
-  { key: "canvas", label: "Canvas", icon: PencilRuler },
+  { key: "files", label: "Files", icon: FolderDown },
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
@@ -66,8 +65,16 @@ function Workspace() {
     custom: false,
   });
   const files = builder.active?.files ?? [];
-  const showBuilder = builder.mode === "build" || builder.builderOpen;
+  const docs = builder.active?.docs ?? [];
+  const showBuilder = builder.mode === "build" || builder.builderOpen || docs.length > 0;
   const busy = builder.status !== "idle" && builder.status !== "error";
+
+  // A new office document jumps straight to the Files tab, ready to download.
+  const docCount = useRef(0);
+  useEffect(() => {
+    if (docs.length > docCount.current) setTab("files");
+    docCount.current = docs.length;
+  }, [docs.length]);
 
   useEffect(
     () => () => {
@@ -188,15 +195,9 @@ function Workspace() {
                         <CodePane files={files} onFilesChange={builder.setFiles} />
                       </Suspense>
                     )}
-                    {tab === "canvas" && (
+                    {tab === "files" && (
                       <Suspense fallback={<PaneFallback />}>
-                        <SketchCanvas
-                          busy={busy}
-                          onGenerate={(dataUrl) => {
-                            setTab("preview");
-                            void builder.send(SKETCH_PROMPT, { image: dataUrl, mode: "build" });
-                          }}
-                        />
+                        <FilesPane docs={docs} files={files} />
                       </Suspense>
                     )}
                   </div>

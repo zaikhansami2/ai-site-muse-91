@@ -21,7 +21,12 @@ import {
 import { buildPreviewDocument, type ProjectFile } from "@/lib/files";
 
 function slug(name: string) {
-  return name.replace(/[^a-z0-9]+/gi, "-").toLowerCase().replace(/^-+|-+$/g, "") || "website";
+  return (
+    name
+      .replace(/[^a-z0-9]+/gi, "-")
+      .toLowerCase()
+      .replace(/^-+|-+$/g, "") || "website"
+  );
 }
 
 export function ShowcaseDialog({
@@ -114,7 +119,12 @@ export function ShowcaseDialog({
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" size="sm" disabled={busy !== null} onClick={() => run("shot")}>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={busy !== null}
+            onClick={() => run("shot")}
+          >
             <Camera className="size-4" />
             {shot ? "Recapture" : "Capture thumbnail"}
           </Button>
