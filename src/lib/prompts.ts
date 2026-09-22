@@ -30,8 +30,32 @@ Use them only when they genuinely improve the result, at most three per site, an
 - Alpine.js light interactivity — https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js (defer)
 - Lenis smooth scrolling — https://unpkg.com/lenis@1/dist/lenis.min.js
 - Leaflet maps (OpenStreetMap tiles) — https://unpkg.com/leaflet/dist/leaflet.js + leaflet.css
+- Motion (Framer Motion core) animations — https://cdn.jsdelivr.net/npm/motion@11/dist/motion.js
+- Three.js 3D scenes — https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js (ES module)
+- Spline 3D viewer — https://unpkg.com/@splinetool/viewer/build/spline-viewer.js (<spline-viewer url="...">)
+- Lottie micro-animations — https://unpkg.com/@lottiefiles/lottie-player@2/dist/lottie-player.js
+- SortableJS drag-and-drop re-ordering — https://cdn.jsdelivr.net/npm/sortablejs@1/Sortable.min.js
 - Google Fonts for typography.
 Never invent CDN URLs outside this list, and never use a library that requires a paid account.`;
+
+/**
+ * Document generation. When the user asks for a Word / Excel / PowerPoint /
+ * PDF deliverable, the generated page builds and downloads the real file in
+ * the browser using these free libraries.
+ */
+export const DOCUMENT_KIT = `Document generation (Word, Excel, PowerPoint, PDF) — all free, browser-side, no key:
+- Word .docx — https://cdn.jsdelivr.net/npm/docx@8/build/index.umd.js  (docx.Document / Packer.toBlob)
+- PowerPoint .pptx — https://cdn.jsdelivr.net/npm/pptxgenjs@3/dist/pptxgen.bundle.js  (new PptxGenJS())
+- Excel .xlsx — https://cdn.jsdelivr.net/npm/exceljs@4/dist/exceljs.min.js  (new ExcelJS.Workbook())
+- PDF — https://cdn.jsdelivr.net/npm/jspdf@2/dist/jspdf.umd.min.js (+ jspdf-autotable for tables)
+- File download — https://cdn.jsdelivr.net/npm/file-saver@2/dist/FileSaver.min.js  (saveAs(blob, name))
+- Live spreadsheet/doc/slide editor in the page — Univer https://unpkg.com/@univerjs/umd/lib/univer.full.umd.js + univer.css
+
+When the request is for a document (company profile, proposal, invoice, report, quotation, CV, deck, price list):
+- Still deliver index.html, but design it as a document builder page: a clean branded preview of the document plus a download button per format the user asked for.
+- Fill the document with real, specific content for that business — never lorem, never blank templates.
+- Wire the download button to actually generate the file client-side with the library above, so clicking it downloads a working .docx/.pptx/.xlsx/.pdf.`;
+
 
 /**
  * Self-directed clarification. The model decides on its own whether one
