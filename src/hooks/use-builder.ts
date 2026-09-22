@@ -255,7 +255,7 @@ export function useBuilder() {
               parsed && parsed.length > 0
                 ? mergeFiles(baseFiles, parsed as ProjectFile[])
                 : project.files,
-            docs: docs.length > 0 ? mergeDocs(project.docs ?? [], docs) : project.docs,
+            ...(docs.length > 0 ? { docs: mergeDocs(project.docs ?? [], docs) } : {}),
           }));
         }
 
