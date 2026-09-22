@@ -104,9 +104,9 @@ function Workspace() {
       status={builder.status}
       error={builder.error}
       busy={busy}
-      onSend={(text, image) => {
+      onSend={(text, image, imageName) => {
         setTab("preview");
-        void builder.send(text, image ? { image } : undefined);
+        void builder.send(text, image ? { image, ...(imageName ? { imageName } : {}) } : undefined);
       }}
       onStop={builder.stop}
       onSelect={builder.setActiveId}
@@ -182,9 +182,7 @@ function Workspace() {
                     )}
                   </div>
                   <div className="min-h-0 flex-1">
-                    {tab === "preview" && (
-                      <PreviewPane files={files} building={busy} />
-                    )}
+                    {tab === "preview" && <PreviewPane files={files} building={busy} />}
                     {tab === "code" && (
                       <Suspense fallback={<PaneFallback />}>
                         <CodePane files={files} onFilesChange={builder.setFiles} />

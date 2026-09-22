@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { parseFiles, stripFiles, type ProjectFile } from "@/lib/files";
-import { detectMode, detectResearch } from "@/lib/intent";
+import {
+  applyAssets,
+  maskAssets,
+  parseFiles,
+  stripFiles,
+  type Asset,
+  type ProjectFile,
+} from "@/lib/files";
+import { detectAssetIntent, detectMode, detectResearch } from "@/lib/intent";
 import type { Mode } from "@/lib/prompts";
 import {
   loadProjects,
@@ -123,7 +130,7 @@ export function useBuilder() {
   };
 
   const send = useCallback(
-    async (text: string, options?: { image?: string; mode?: Mode }) => {
+    async (text: string, options?: { image?: string; imageName?: string; mode?: Mode }) => {
       const requestMode: Mode =
         options?.mode ??
         (mode === "auto"
@@ -146,11 +153,30 @@ export function useBuilder() {
       const current = projectsRef.current.find((p) => p.id === activeIdRef.current);
       const baseFiles: ProjectFile[] = current?.files ?? [];
       const history: ChatMessage[] = [...(current?.messages ?? []), userMessage];
+
+      // An attached image is either a design reference or real content to place
+      // inside the site (a logo, a photo). When it is content, it becomes an
+      // asset with a token the model can position exactly where the user asked.
+      const existingAssets: Asset[] = current?.assets ?? [];
+      const placeImage =
+        requestMode === "build" &&
+        Boolean(options?.image) &&
+        detectAssetIntent(text, { hasFiles: baseFiles.length > 0 });
+      const newAsset: Asset | null = placeImage
+        ? {
+            token: `__ASSET_${existingAssets.length + 1}__`,
+            name: options?.imageName ?? `upload-${existingAssets.length + 1}`,
+            url: options!.image!,
+          }
+        : null;
+      const assets: Asset[] = newAsset ? [...existingAssets, newAsset] : existingAssets;
+
       patchActive((project) => {
         return {
           ...project,
           name:
             project.messages.length === 0 && text.trim() ? text.trim().slice(0, 48) : project.name,
+          ...(newAsset ? { assets } : {}),
           messages: [
             ...project.messages,
             userMessage,
@@ -170,7 +196,12 @@ export function useBuilder() {
           body: JSON.stringify({
             mode: requestMode,
             research: research || detectResearch(text),
-            ...(requestMode === "build" && baseFiles.length > 0 ? { files: baseFiles } : {}),
+            ...(requestMode === "build" && baseFiles.length > 0
+              ? { files: maskAssets(baseFiles, assets) }
+              : {}),
+            ...(assets.length > 0
+              ? { assets: assets.map(({ token, name }) => ({ token, name })) }
+              : {}),
             messages: history.map((m) => ({
               role: m.role,
               // Past build replies are stored with full code; send the summary only
@@ -202,7 +233,7 @@ export function useBuilder() {
           }
 
           const snapshot = acc;
-          const parsed = requestMode === "build" ? parseFiles(snapshot) : null;
+          const parsed = requestMode === "build" ? applyAssets(parseFiles(snapshot), assets) : null;
           patchActive((project) => ({
             ...project,
             messages: project.messages.map((m) =>
@@ -218,7 +249,7 @@ export function useBuilder() {
         // Tidy the generated code with Prettier before it lands in the editor.
         if (requestMode === "build") {
           setStatus("formatting");
-          const finalFiles = parseFiles(acc);
+          const finalFiles = applyAssets(parseFiles(acc), assets);
           if (finalFiles.length > 0) {
             const { formatAll } = await import("@/lib/format");
             const pretty = await formatAll(mergeFiles(baseFiles, finalFiles as ProjectFile[]));

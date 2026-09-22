@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { streamText, type ModelMessage } from "ai";
 
 import { getLovableModel } from "@/lib/ai-gateway.server";
-import { editContext, systemPrompt, type Mode } from "@/lib/prompts";
+import { assetContext, editContext, systemPrompt, type Mode } from "@/lib/prompts";
 import { researchContext } from "@/lib/research.server";
 
 type IncomingMessage = {
@@ -16,6 +16,7 @@ type Body = {
   messages?: IncomingMessage[];
   research?: boolean;
   files?: { path: string; content: string }[];
+  assets?: { token: string; name: string }[];
 };
 
 function toModelMessages(messages: IncomingMessage[]): ModelMessage[] {
@@ -57,8 +58,10 @@ export const Route = createFileRoute("/api/chat")({
         }
 
         const existing = Array.isArray(body.files) ? body.files : [];
+        const assets = Array.isArray(body.assets) ? body.assets : [];
         const parts = [systemPrompt(mode)];
         if (mode === "build" && existing.length > 0) parts.push(editContext(existing));
+        if (mode === "build" && assets.length > 0) parts.push(assetContext(assets));
         if (research) parts.push(research);
         const system = parts.join("\n\n");
 

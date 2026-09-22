@@ -21,7 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Status, UiMode } from "@/hooks/use-builder";
-import { stripFiles } from "@/lib/files";
+import { parseClarify, stripFiles } from "@/lib/files";
 import type { Mode } from "@/lib/prompts";
 import type { ChatMessage, Project } from "@/lib/storage";
 import { cn } from "@/lib/utils";
@@ -31,6 +31,7 @@ import {
   ChevronDown,
   Globe2,
   Hammer,
+  HelpCircle,
   ImagePlus,
   ListChecks,
   Menu,
@@ -89,7 +90,7 @@ export function ChatPanel({
   status: Status;
   error: string | null;
   busy: boolean;
-  onSend: (text: string, image?: string) => void;
+  onSend: (text: string, image?: string, imageName?: string) => void;
   onStop: () => void;
   onSelect: (id: string) => void;
   onCreate: () => void;
@@ -107,10 +108,10 @@ export function ChatPanel({
     if (!busy) textareaRef.current?.focus();
   }, [busy, activeId]);
 
-  const submit = async (text: string, image?: string) => {
+  const submit = async (text: string, image?: string, imageName?: string) => {
     const file = image ?? attachment?.url;
     if (busy || (!text.trim() && !file)) return;
-    onSend(text, file);
+    onSend(text, file, imageName ?? attachment?.name);
     setInput("");
     setAttachment(null);
   };
@@ -124,6 +125,11 @@ export function ChatPanel({
   };
 
   const chatStatus = status === "error" ? "error" : busy ? "streaming" : "ready";
+
+  // The assistant decides for itself when a question is needed; when it asks,
+  // we show a choice card instead of plain text.
+  const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
+  const clarify = !busy && lastAssistant ? parseClarify(lastAssistant.content) : null;
 
   return (
     <div className="relative flex h-full min-h-0 overflow-hidden">
@@ -288,15 +294,36 @@ export function ChatPanel({
                       />
                     )}
                     {message.role === "assistant" ? (
-                      <MessageResponse>
-                        {message.mode === "build" ? stripFiles(message.content) : message.content}
-                      </MessageResponse>
+                      <MessageResponse>{stripFiles(message.content)}</MessageResponse>
                     ) : (
                       <p className="whitespace-pre-wrap">{message.content}</p>
                     )}
                   </MessageContent>
                 </Message>
               ))
+            )}
+            {clarify && (
+              <div className="mt-2 rounded-lg border border-border bg-background/90 p-4 shadow-sm">
+                <p className="flex items-start gap-2 text-sm font-medium">
+                  <HelpCircle className="mt-0.5 size-4 shrink-0 text-primary" />
+                  {clarify.question}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {clarify.options.map((option) => (
+                    <Button
+                      key={option}
+                      size="sm"
+                      variant="outline"
+                      onClick={() => void submit(option)}
+                    >
+                      {option}
+                    </Button>
+                  ))}
+                </div>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Or just type your own answer below.
+                </p>
+              </div>
             )}
             {busy && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -330,7 +357,12 @@ export function ChatPanel({
                   .then((response) => response.blob())
                   .then((blob) => {
                     const reader = new FileReader();
-                    reader.onload = () => void submit(message.text, String(reader.result));
+                    reader.onload = () =>
+                      void submit(
+                        message.text,
+                        String(reader.result),
+                        message.files[0]?.filename ?? "upload",
+                      );
                     reader.readAsDataURL(blob);
                   });
               } else {
