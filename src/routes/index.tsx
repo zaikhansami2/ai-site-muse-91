@@ -1,18 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Code2, Eye, PencilRuler } from "lucide-react";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 
 import balloonAsset from "@/assets/balloon-loop-fast.mp4.asset.json";
 import { ChatPanel } from "@/components/workspace/ChatPanel";
-import { CodePane } from "@/components/workspace/CodePane";
 import { PreviewPane } from "@/components/workspace/PreviewPane";
-import { SketchCanvas } from "@/components/workspace/SketchCanvas";
 import { TopBar } from "@/components/workspace/TopBar";
 import { Button } from "@/components/ui/button";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { useBuilder } from "@/hooks/use-builder";
 import { SKETCH_PROMPT } from "@/lib/prompts";
 import { cn } from "@/lib/utils";
+
+// Heavy editor/canvas panes load on demand so the workspace opens instantly.
+const CodePane = lazy(() =>
+  import("@/components/workspace/CodePane").then((m) => ({ default: m.CodePane })),
+);
+const SketchCanvas = lazy(() =>
+  import("@/components/workspace/SketchCanvas").then((m) => ({ default: m.SketchCanvas })),
+);
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -42,6 +48,14 @@ const TABS = [
 
 type TabKey = (typeof TABS)[number]["key"];
 type BackgroundMedia = { url: string; type: "video" | "image"; custom: boolean };
+
+function PaneFallback() {
+  return (
+    <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+      Loading…
+    </div>
+  );
+}
 
 function Workspace() {
   const builder = useBuilder();
@@ -168,16 +182,24 @@ function Workspace() {
                     )}
                   </div>
                   <div className="min-h-0 flex-1">
-                    {tab === "preview" && <PreviewPane files={files} />}
-                    {tab === "code" && <CodePane files={files} onFilesChange={builder.setFiles} />}
+                    {tab === "preview" && (
+                      <PreviewPane files={files} building={busy} />
+                    )}
+                    {tab === "code" && (
+                      <Suspense fallback={<PaneFallback />}>
+                        <CodePane files={files} onFilesChange={builder.setFiles} />
+                      </Suspense>
+                    )}
                     {tab === "canvas" && (
-                      <SketchCanvas
-                        busy={busy}
-                        onGenerate={(dataUrl) => {
-                          setTab("preview");
-                          void builder.send(SKETCH_PROMPT, { image: dataUrl, mode: "build" });
-                        }}
-                      />
+                      <Suspense fallback={<PaneFallback />}>
+                        <SketchCanvas
+                          busy={busy}
+                          onGenerate={(dataUrl) => {
+                            setTab("preview");
+                            void builder.send(SKETCH_PROMPT, { image: dataUrl, mode: "build" });
+                          }}
+                        />
+                      </Suspense>
                     )}
                   </div>
                 </div>

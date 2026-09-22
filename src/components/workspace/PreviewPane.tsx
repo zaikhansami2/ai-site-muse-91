@@ -13,7 +13,7 @@ const VIEWPORTS = {
 
 type ViewportKey = keyof typeof VIEWPORTS;
 
-export function PreviewPane({ files }: { files: ProjectFile[] }) {
+export function PreviewPane({ files, building }: { files: ProjectFile[]; building?: boolean }) {
   const [viewport, setViewport] = useState<ViewportKey>("desktop");
   const [nonce, setNonce] = useState(0);
   const doc = useMemo(() => buildPreviewDocument(files), [files]);
@@ -42,6 +42,12 @@ export function PreviewPane({ files }: { files: ProjectFile[] }) {
             );
           })}
         </div>
+        {building && (
+          <span className="ml-3 flex items-center gap-2 text-xs font-medium text-primary">
+            <span className="size-2 animate-pulse rounded-full bg-primary" />
+            Building your website…
+          </span>
+        )}
         <Button variant="ghost" size="sm" onClick={() => setNonce((n) => n + 1)}>
           <RotateCw className="size-3.5" />
           Refresh
@@ -64,9 +70,13 @@ export function PreviewPane({ files }: { files: ProjectFile[] }) {
           />
         ) : (
           <div className="flex flex-col items-center justify-center text-center text-sm text-muted-foreground">
-            <p className="font-display text-base text-foreground">Nothing to preview yet</p>
+            <p className="font-display text-base text-foreground">
+              {building ? "Building your website…" : "Nothing to preview yet"}
+            </p>
             <p className="mt-1 max-w-xs">
-              Describe the site you want in Build mode and it will render here live.
+              {building
+                ? "The first sections will appear here as soon as they are written."
+                : "Describe the site you want and it will render here live."}
             </p>
           </div>
         )}

@@ -43,3 +43,23 @@ Before the files, write one short sentence describing what you built. After the 
 export const SKETCH_PROMPT = `The attached image is a hand-drawn wireframe sketch of a website. Interpret the layout, hierarchy and labelled regions, then build a polished, production-quality website matching that structure.`;
 
 export const SCREENSHOT_PROMPT = `The attached image is a design screenshot. Recreate it as closely as possible: layout, spacing, typography, colors and components.`;
+
+/**
+ * Follow-up edit context. The model receives the current site and must return
+ * ONLY the files it actually changes, so a small tweak never rebuilds the site.
+ */
+export function editContext(files: { path: string; content: string }[]): string {
+  const listing = files
+    .map((file) => `<file path="${file.path}">\n${file.content}\n</file>`)
+    .join("\n\n");
+
+  return `The project already has these files. This is the current state of the site:
+
+${listing}
+
+IMPORTANT — incremental editing rules:
+- Treat the request as a change to the existing site, not a new project.
+- Keep all existing content, structure, copy and styling that the user did not ask to change.
+- Output ONLY the files you actually modify, each one complete, in the <file path="..."> format.
+- Never re-emit unchanged files, and never rewrite the site from scratch.`;
+}
