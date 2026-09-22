@@ -65,8 +65,16 @@ function Workspace() {
     custom: false,
   });
   const files = builder.active?.files ?? [];
-  const showBuilder = builder.mode === "build" || builder.builderOpen;
+  const docs = builder.active?.docs ?? [];
+  const showBuilder = builder.mode === "build" || builder.builderOpen || docs.length > 0;
   const busy = builder.status !== "idle" && builder.status !== "error";
+
+  // A new office document jumps straight to the Files tab, ready to download.
+  const docCount = useRef(0);
+  useEffect(() => {
+    if (docs.length > docCount.current) setTab("files");
+    docCount.current = docs.length;
+  }, [docs.length]);
 
   useEffect(
     () => () => {
@@ -187,15 +195,9 @@ function Workspace() {
                         <CodePane files={files} onFilesChange={builder.setFiles} />
                       </Suspense>
                     )}
-                    {tab === "canvas" && (
+                    {tab === "files" && (
                       <Suspense fallback={<PaneFallback />}>
-                        <SketchCanvas
-                          busy={busy}
-                          onGenerate={(dataUrl) => {
-                            setTab("preview");
-                            void builder.send(SKETCH_PROMPT, { image: dataUrl, mode: "build" });
-                          }}
-                        />
+                        <FilesPane docs={docs} files={files} />
                       </Suspense>
                     )}
                   </div>
