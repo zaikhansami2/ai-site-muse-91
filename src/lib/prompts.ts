@@ -56,7 +56,6 @@ When the request is for a document (company profile, proposal, invoice, report, 
 - Fill the document with real, specific content for that business — never lorem, never blank templates.
 - Wire the download button to actually generate the file client-side with the library above, so clicking it downloads a working .docx/.pptx/.xlsx/.pdf.`;
 
-
 /**
  * Self-directed clarification. The model decides on its own whether one
  * question is genuinely needed; the UI renders it as a choice card.
