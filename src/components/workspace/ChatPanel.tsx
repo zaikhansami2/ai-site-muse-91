@@ -326,14 +326,37 @@ export function ChatPanel({
               </div>
             )}
             {busy && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="mt-2 rounded-lg border border-border bg-background/85 p-3 text-sm shadow-sm">
                 <Shimmer>
                   {status === "analyzing"
-                    ? "Thinking…"
+                    ? "Thinking about your request…"
                     : status === "formatting"
-                      ? "Finishing your site…"
-                      : "Creating…"}
+                      ? "Tidying up the code…"
+                      : streamingFiles.length > 0
+                        ? `Writing ${streamingFiles[streamingFiles.length - 1]!.path}…`
+                        : "Creating…"}
                 </Shimmer>
+                {streamingFiles.length > 0 && (
+                  <ul className="mt-2 space-y-1">
+                    {streamingFiles.map((file, index) => {
+                      const done = index < streamingFiles.length - 1;
+                      return (
+                        <li
+                          key={file.path}
+                          className="flex items-center gap-2 text-xs text-muted-foreground"
+                        >
+                          {done ? (
+                            <Check className="size-3.5 text-primary" />
+                          ) : (
+                            <FileCode2 className="size-3.5 animate-pulse text-primary" />
+                          )}
+                          <span className="font-mono">{file.path}</span>
+                          <span className="ml-auto">{file.content.split("\n").length} lines</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
               </div>
             )}
             {error && (
