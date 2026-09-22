@@ -21,7 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Status, UiMode } from "@/hooks/use-builder";
-import { stripFiles } from "@/lib/files";
+import { parseClarify, stripFiles } from "@/lib/files";
 import type { Mode } from "@/lib/prompts";
 import type { ChatMessage, Project } from "@/lib/storage";
 import { cn } from "@/lib/utils";
@@ -89,7 +89,7 @@ export function ChatPanel({
   status: Status;
   error: string | null;
   busy: boolean;
-  onSend: (text: string, image?: string) => void;
+  onSend: (text: string, image?: string, imageName?: string) => void;
   onStop: () => void;
   onSelect: (id: string) => void;
   onCreate: () => void;
@@ -107,10 +107,10 @@ export function ChatPanel({
     if (!busy) textareaRef.current?.focus();
   }, [busy, activeId]);
 
-  const submit = async (text: string, image?: string) => {
+  const submit = async (text: string, image?: string, imageName?: string) => {
     const file = image ?? attachment?.url;
     if (busy || (!text.trim() && !file)) return;
-    onSend(text, file);
+    onSend(text, file, imageName ?? attachment?.name);
     setInput("");
     setAttachment(null);
   };
