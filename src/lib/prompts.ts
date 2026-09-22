@@ -143,7 +143,27 @@ Placement rules:
 - Put each image exactly where the user asked for it (for example "logo at the top" means inside the header/navbar, left of the brand name).
 - If the user did not say where, choose the most natural spot for that kind of image and mention it in your sentence.
 - Reference the image with the token exactly as given: <img src="__ASSET_1__" alt="...">. Never rename, wrap, quote differently, or base64-inline it yourself.
-- Size it with CSS (a logo is usually 32-48px tall), give it real alt text, and keep it responsive.`;
+- Size it with CSS (a logo is usually 32-48px tall), give it real alt text, and keep it responsive.
+- If the deliverable is an office document (<doc> block), put the token in the document's "logo" field (for a logo/cover) or in the "image" field of the right section — never as an <img> tag and never as plain text.`;
+}
+
+/**
+ * Follow-up edit context for office documents: the model must update the
+ * existing <doc> spec instead of starting a new deliverable.
+ */
+export function docContext(docs: { id: string; spec: string }[]): string {
+  const listing = docs.map((doc) => `<doc>\n${doc.spec}\n</doc>`).join("\n\n");
+
+  return `The project already contains these office documents:
+
+${listing}
+
+IMPORTANT — document editing rules:
+- A follow-up request (including "put this image in it", "add a section", "change the price") is a change to the EXISTING document, not a new one.
+- Re-emit the SAME document with the same "name" and "id" value in "name", complete, with your change applied — the app replaces it.
+- Keep every existing section, wording and table the user did not ask to change.
+- Do NOT create website files for a document edit.
+- Keep any __ASSET_n__ token already in the document untouched.`;
 }
 
 /**
