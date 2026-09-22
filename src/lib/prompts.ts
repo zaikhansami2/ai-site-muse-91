@@ -55,6 +55,7 @@ When the user asks for a document — company profile, proposal, invoice, quotat
   "formats": ["docx", "pdf"],
   "sections": [
     { "heading": "About Us", "paragraphs": ["..."], "bullets": ["..."] },
+    { "heading": "Our Work", "paragraphs": ["..."], "image": "__ASSET_1__", "imageCaption": "..." },
     { "heading": "Services & Rates", "table": { "headers": ["Service", "Rate"], "rows": [["...", "..."]] } }
   ]
 }
@@ -65,6 +66,7 @@ Document rules:
 - Write real, specific, complete content for that exact business. Never lorem, never blank templates, never "[insert here]".
 - Use tables for any pricing, schedule, comparison or data.
 - Keep the JSON valid: no comments, no trailing commas, no markdown inside strings.
+- Images: if the user attached images, they are listed for you as __ASSET_n__ tokens. Put a logo in the top-level "logo" field and any other picture in the "image" field of the section it belongs to, using the token exactly as given. Never skip an attached image, never describe it in text instead, never invent image URLs.
 - A document request needs NO website files: emit the <doc> block alone (plus one short sentence). Only add <file> blocks if the user also asked for a web page.`;
 
 /**
